@@ -190,7 +190,7 @@ class App extends Component {
                                     onClick={() => {this.postDone(user._id)}}
                                     bsStyle="danger"
                                     bsSize="small">
-                                    TESTING</Button>
+                                    TESTINGCOMMANDS</Button>
                                 <span style={{position:"absolute",top:"-5px",left:"0px",backgroundColor:"black",color:"white",fontSize:"12px"}}>
                                 {user.unread || null}
                                 </span>
