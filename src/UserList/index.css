@@ -1,0 +1,191 @@
+
+    .container-header {
+      grid-area:a;
+      text-align: center;
+      box-sizing: border-box;
+      font-size: 30px;
+      color: black;
+    }
+    
+    .App-title {
+      font-size: 1.5em;
+    }
+    
+    .App-intro {
+      font-size: large;
+    }
+    .container {
+      display: grid;
+      height: 100%;
+      grid-template-areas: ;
+     grid-template-columns: 1fr;
+     grid-template-areas:    "h"
+                             "b"
+                             "b"
+                             "b"
+                             "b"
+                             "f";
+     grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr;
+      grid-gap:10px;
+      box-sizing: border-box;
+    background-color: #eaffff;
+    height: 100vh;
+    overflow: hidden !important;
+    letter-spacing: -1px;    
+    }
+    .container-header{
+      font-size: 20px;
+      grid-area: h;
+    }
+    .item-container{
+      grid-area: b;
+      display: grid;
+      grid-gap: 7%;
+      padding: 1%;
+      overflow: scroll;
+      grid-template-rows: repeat(5,14%);
+      grid-template-columns: 1fr 1fr;
+    }
+    
+    .name {
+      grid-area: name;
+    }
+    .id {
+      grid-area: id;
+    }
+    .userid {
+      grid-area: userid;
+    }
+    .date {
+      grid-area: date;
+    }
+    .button {
+      grid-area: button;
+    }
+    .footer{
+      display: grid;
+      grid-area: f;
+        grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+        grid-template-rows: auto auto 1fr;
+    }
+    .footerContent{
+      grid-row: 3;
+      grid-column: 1/-1;
+      text-align: center;
+      font-size: 30px;
+    }
+    .pagination{
+      grid-column: 1/-1;
+      font-size: 10px;
+      grid-row: 3;
+      padding: 2%;
+      display: grid;
+      grid-gap: 1%;
+      justify-content: center;
+     grid-template-columns: repeat(8,7%); 
+    }
+    .blue{
+      background-color: rgb(151, 213, 220);
+      transition: all 1s;
+    }
+ 
+    .pagination button{
+      cursor: pointer;
+      height: 100%;
+      display: grid;
+      color:black;
+      grid-row: 2/3;
+      text-decoration: none !important;
+      background-color: #eaffea;
+      box-shadow: 0px 2px 2px black;
+      border-radius:5px;
+      font-size: 20px;
+    }
+    .pagination button:hover{
+      background-color: aquamarine;
+    }
+    .item{
+      display: grid;
+      height: 100%;
+      width: 100%;
+      padding: 3%;
+      font-family: sans-serif;
+      font-weight: 900;
+      color:black;
+      background-color: #eaffea;
+      justify-content: space-around;
+      grid-template-areas:
+            "name  userid  button"
+            "date    date    button";
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 50% 50%;
+      border-radius: 5%;
+      box-sizing: border-box;
+      font-size: 1em;
+    }
+    
+    .item p {
+      margin: 0 0 0 0;
+      padding: 0;
+      text-align: left;
+      font-size: 1em;
+    }
+    .item span {
+      margin: 0 0 0 0;
+      text-align: left;
+      font-size: 1em;
+    }
+    .item button {
+      font-size: 1em;
+      border-radius: 10%;
+      margin: 5px;
+      background-color: #eaffff;
+      border-color: black;
+    }
+  
+        
+    @media (min-width: 1400px) {
+      .item-container{
+      grid-area: b;
+      display: grid;
+      justify-content: space-around;
+      grid-gap: 7%;
+      padding: 1%;
+      overflow: scroll;
+      grid-template-rows: repeat(5,14%);
+      grid-template-columns: 1fr 1fr;
+    }
+        
+    }
+  @media (max-width: 900px) {
+      .item-container{
+      grid-area: b;
+      display: grid;
+      justify-content: space-around;
+      grid-gap: 7%;
+      padding: 1%;
+      overflow: scroll;
+      grid-template-rows: repeat(10,1fr);
+      grid-template-columns: 1fr;
+    }
+    .pagination{
+      grid-row: 2/ span 2;
+     grid-template-columns: repeat(8,9%); 
+    }
+  }
+  @media (max-width: 600px) {
+      .item{
+      
+      grid-template-areas:
+            "name"
+            "userid"
+            "date"
+            "button";
+            grid-template-columns: 90%;
+            grid-template-rows: 1fr 1fr 1fr 1fr;
+            justify-content: space-between;
+    }
+    .pagination{
+     grid-template-columns: repeat(8,1fr); 
+    }
+  }

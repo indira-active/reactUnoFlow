@@ -1,15 +1,15 @@
 import React, { Component } from "react";
-import Chat from "./Chat.js"
-import Hoc from "./hoc.js"
+import Chat from "./Chat"
+import Hoc from "./../hoc.js"
 import { Button} from "react-bootstrap"
-import './App.css';
+import classes from './index.css';
 import io from 'socket.io-client'
 import clone from 'clone'
 
 const socket = io('https://damp-plateau-11898.herokuapp.com/');
 
 
-class App extends Component {
+class ChatContainer extends Component {
     state = {
         users: [{
             userId: "andrewjameswilliams1995@gmail.com",
@@ -73,12 +73,14 @@ class App extends Component {
         .then(res => res.json())
         .then(load=>{
             console.log('LOAD IS BEING CALLED')
+            console.log(load,'see load here ')
             const messages = load.messages.map(msg=>{
                 return {
                     content:msg.text.trim() || msg.actions.map((val)=>{
                         return val.text
-                    }).join('\n'),
-                    username:msg.role === "appMaker"?"admin":username
+                    }).join(' '),
+                    username:msg.role === "appMaker"?"admin":username,
+                    id:msg._id
                 }
             })
             const users = clone(this.state.users);
@@ -198,7 +200,7 @@ class App extends Component {
                         )
                     }):(<h3 style={{textAlign:"center"}}>NO MORE USERS</h3>)}
                 </div>
-                {USER?(<div className="App">
+                {USER?(<div className={classes.App}>
                     <Chat wipeUnread={this.wipeUnread} newMessage={this.addToMessages} currentIndex={this.state.currentUser} currentUser={USER} messages={USER.messages} />
                 </div>):null}
             </Hoc>
@@ -207,4 +209,4 @@ class App extends Component {
 }
 
 
-export default App
+export default ChatContainer

@@ -1,0 +1,49 @@
+.Header{
+	display: grid;
+	height: 100%;
+	width: 100%;
+	grid-template-areas: "x x x x x"
+						 "Home Search Chat Filter Users"
+						 "y y y y y";
+	grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+	grid-gap: 5px; 
+	grid-template-rows: 33.3% 33.3% 33.3%;
+	overflow: hidden;
+}
+.Home{
+	grid-area: Home;
+
+}
+.Search{
+	grid-area: Search;
+}
+.Chat{
+	grid-area: Chat;
+}
+.Filter{
+	grid-area: Filter;
+}
+.Users{
+	grid-area: Users;
+}
+.align{
+	text-align: center;
+}
+.all{
+	height: 100%;
+	display: grid;
+	color:black;
+	grid-row: 2/3;
+	text-decoration: none !important;
+	box-shadow: 0px 2px 2px black;
+	border-color: black;
+	border-radius: 10%;
+}
+.all:hover{
+background-color:aquamarine;
+color:white;
+}
+.activeClassName{
+	background-color: #eaffea;
+}
+
