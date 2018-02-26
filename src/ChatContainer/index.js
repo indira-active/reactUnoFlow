@@ -35,7 +35,7 @@ class ChatContainer extends Component {
         .then(load=>{
             const users = load.map(val=>{
                 return{
-                    userId:val.smoochUserId,
+                    userId:val.smoochUserId?val.smoochUserId:`anonymous:${val.smoochId}`,
                     _id:val.smoochId,
                     messages:[],
                     notCalled:true,
@@ -48,7 +48,14 @@ class ChatContainer extends Component {
     socketCall = () => {
         socket.on('testEvent', message => {
             const msg = JSON.parse(message)
-            console.log(msg)
+            if(msg.trigger === 'merge:appUser'){
+                console.log(msg)
+                this.postDone(msg.discarded[0]._id,msg.surviving._id,msg.surviving.userId);
+                setTimeout(() => {
+                  this.loadUsers();
+                }, 400)
+                alert(`${msg.discarded[0]._id} is merging with ${msg.surviving.userId} aka ${msg.surviving._id}`)
+            }
             if (msg.trigger === 'message:appUser') {
                 this.addToMessages({
                     content: msg.messages[0].text,
@@ -58,8 +65,13 @@ class ChatContainer extends Component {
             }
         });
     }
-    postDone = (smoochId)=>{
-        this.setState({currentUser:0,users:this.state.users.filter(user=>user._id !== smoochId)})
+    postDone = (smoochId,userValue,username)=>{
+        if(this.state.users.find(user=>user._id === userValue) === undefined){
+            this.postOpen(userValue,true)
+        }else{
+            this.postOpen(userValue)
+        }
+        this.setState({currentUser:this.state.currentUser === 0?1:0,users:this.state.users.filter(user=>user._id !== smoochId)})
         fetch(`https://damp-plateau-11898.herokuapp.com/api/updateuser`, {
             method: 'POST',
             body: JSON.stringify({smoochId}), 
@@ -68,29 +80,60 @@ class ChatContainer extends Component {
             })
           }).then(res => res.json())
           .catch(error => console.error('Error:', error))
-          .then(response => console.log('Success:', response));
+          .then(response => {
+                console.log('Success:', response)
+                setTimeout(() => {
+                  this.callUsers(userValue,username)
+                }, 300)
+          });
     }
-    callUsers = (user,username,index)=>{
+    postOpen = (smoochId,update)=>{
+        fetch(`https://damp-plateau-11898.herokuapp.com/api/updateusertoactive`, {
+            method: 'POST',
+            body: JSON.stringify({smoochId}), 
+            headers: new Headers({
+              'Content-Type': 'application/json'
+            })
+          }).then(res => res.json())
+          .catch(error => console.error('Error:', error))
+          .then(response => {
+                console.log('Success:', response)
+                if(update){
+                    this.loadUsers();
+                }
+          });
+    }
+    callUsers = (user,username,index,change)=>{
         fetch('https://damp-plateau-11898.herokuapp.com/api/getmessages?appUser='+user)
         .then(res => res.json())
         .then(load=>{
             console.log('LOAD IS BEING CALLED')
             console.log(load,'see load here ')
             const messages = load.messages.map(msg=>{
-                return {
-                    content:msg.text.trim() || msg.actions.map((val)=>{
+                const content = msg.text.trim() || msg.actions.map((val)=>{
                         return val.text
-                    }).join(' '),
-                    username:msg.role === "appMaker"?"admin":username,
-                    id:msg._id
+                    }).join(' ')
+                return {
+                    content:content,
+                    username:msg.role === "appMaker"?"admin":username|| `anonymous : ${username||msg._id}`,
+                    id:msg._id,
+                    authorId:msg.authorId,
+                    readMore:content.length>140?true:false
                 }
             })
             const users = clone(this.state.users);
-            const newUser ={...users[index],messages,notCalled:false} 
-            users[index] = newUser;
-
-            this.setState({users,currentUser:index})
-
+            let indexValue = index;
+            if(!indexValue){
+                users.forEach((item,index) => {
+                  if(item._id === user)
+                  {
+                    indexValue = index;
+                  }
+                })
+            }
+            const newUser ={...users[indexValue],messages,notCalled:false} 
+            users[indexValue] = newUser;
+            this.setState({users,currentUser:change?indexValue:this.state.currentUser})
         }).catch(err=>{console.log('err is happening',err)})
     }
     wipeUnread = (userIndex)=>{
@@ -104,6 +147,23 @@ class ChatContainer extends Component {
                 }
                 return user
             })
+        })
+    }
+    changeReadMore = (messageId)=>{
+        const users = [...this.state.users];
+        const currentUser = users[this.state.currentUser];
+        const messages  = currentUser.messages.map((msg,index)=>{
+            if(messageId === msg.id){
+                return {...msg,readMore:false}
+            }
+            else {
+                return msg
+            }
+        });
+        const newUser = {...currentUser,messages};
+        users[this.state.currentUser] = newUser;
+        this.setState({
+            users
         })
     }
     addToMessages = (message) => {
@@ -120,7 +180,8 @@ class ChatContainer extends Component {
                             unread:user.unread+1,
                             messages: user.messages.concat({
                                 content: message.content,
-                                username: message.username
+                                username: message.username,
+                                readMore:message.content.length>140?true:false
                             })
                         }
                     } else if (user._id === message._id && message.username !== "admin") {
@@ -130,7 +191,8 @@ class ChatContainer extends Component {
                             unread:user.unread+1,
                             messages: user.messages.concat({
                                 content: message.content,
-                                username: message.username
+                                username: message.username,
+                                readMore:message.content.length>140?true:false
                             })
                         }
                     }else if(user._id === message._id){
@@ -139,7 +201,8 @@ class ChatContainer extends Component {
                             ...user,
                             messages: user.messages.concat({
                                 content: message.content,
-                                username: message.username
+                                username: message.username,
+                                readMore:message.content.length>140?true:false
                             })
                         }
                     } else {
@@ -178,14 +241,17 @@ class ChatContainer extends Component {
         const USER = this.state.users[this.state.currentUser];
         return (
             <Hoc>
-                <div style={{ height: "10vh", overflow: "scroll" }}>{USER?this.state.users.map(
+                <div style={{ height: "10vh", overflow: "scroll" }}>{USER?this.state.users.sort((a,b)=>{
+                    const status = b.unread - a.unread;
+                    return status != 0?status:(a.userId.replace(/@/g,'')>b.userId.replace(/@/g,'')?1:-1);
+                }).map(
                     (user, index) => {
                         return (
-                            <div key={index} style={{ display: 'inline-block', margin: "3px",position:'relative'}}>
+                            <div key={user._id+Date.now()+Math.random()} style={{ display: 'inline-block', margin: "3px",position:'relative'}}>
                                 <Button
-                                    onClick={() => { return user.notCalled?this.callUsers(user._id,user.userId,index):this.setState({currentUser:index})}}
+                                    onClick={() => { return user.notCalled?this.callUsers(user._id,user.userId,index,true):this.setState({currentUser:index})}}
                                     bsStyle='primary'
-                                    bsSize="small">{user.userId}</Button>
+                                    bsSize="small">{user.userId?user.userId:`NR ${user._id}`}</Button>
                                 <Button
                                     onClick={() => {this.callUsers(user._id,user.userId,index)}}
                                     bsStyle="success"
@@ -195,7 +261,7 @@ class ChatContainer extends Component {
                                     onClick={() => {this.postDone(user._id)}}
                                     bsStyle="danger"
                                     bsSize="small">
-                                    DEMO</Button>
+                                    close</Button>
                                 <span style={{position:"absolute",top:"-5px",left:"0px",backgroundColor:"black",color:"white",fontSize:"12px"}}>
                                 {user.unread || null}
                                 </span>
@@ -204,7 +270,11 @@ class ChatContainer extends Component {
                     }):(<h3 style={{textAlign:"center"}}>NO MORE USERS</h3>)}
                 </div>
                 {USER?(<div className={classes.App}>
-                    <Chat wipeUnread={this.wipeUnread} newMessage={this.addToMessages} currentIndex={this.state.currentUser} currentUser={USER} messages={USER.messages} />
+                    <Chat wipeUnread={this.wipeUnread}
+                     newMessage={this.addToMessages}
+                     changeReadMore={this.changeReadMore}
+                      currentIndex={this.state.currentUser}
+                       currentUser={USER} messages={USER.messages} />
                 </div>):null}
             </Hoc>
         )
