@@ -2,10 +2,13 @@ import React, { Component } from 'react';
 import Hoc from "./../hoc"
 import classes from "./index.css"
 import Header from "./../Header"
+import {connect} from "react-redux"
+import {withRouter} from "react-router"
+import moment from "moment"
 
 class UserList extends Component {
    state = {
-    users:this.props.users,
+    users:null,
       currentUser:0,
       left:0,
       right:5,
@@ -30,6 +33,9 @@ class UserList extends Component {
         currentUser:val
       })
     }
+  }
+  componentDidMount(){
+    this.setState({users:this.props.users})
   }
   previous = ()=>{
     let left = this.state.left;
@@ -64,6 +70,7 @@ class UserList extends Component {
   }
 
   render() {
+     console.log(this.props)
       if(this.state.users)
 {
 
@@ -88,7 +95,7 @@ class UserList extends Component {
                            <span> UserId: {y+1} </span>
                            <span style={{marginLeft:"2px"}}> SmoochId:{x.smoochId}</span>
                          </div>
-                         <span className={classes.date} >Date entered:  {x.date.toDateString()}</span>
+                         <span className={classes.date} >Date entered: {new moment(x.date).format("MMM Do YY")}</span>
                          <button className={classes.button}>Click Me</button>
                       </div>
                       )
@@ -124,4 +131,16 @@ class UserList extends Component {
   }
 }
 
-export default UserList;
+const mapStateToProps = state => {
+    return {
+        usrs: state.users.users
+    };
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        addUsers: () => dispatch({type:"USERS",payload:"something"}),
+    }
+}
+
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(UserList));

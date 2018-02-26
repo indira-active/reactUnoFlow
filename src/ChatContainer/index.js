@@ -4,6 +4,8 @@ import Hoc from "./../hoc.js"
 import { Button} from "react-bootstrap"
 import classes from './index.css';
 import io from 'socket.io-client'
+import { connect } from 'react-redux';
+
 import clone from 'clone'
 
 const socket = io('https://damp-plateau-11898.herokuapp.com/');
@@ -172,6 +174,7 @@ class ChatContainer extends Component {
     }
     render() {
         console.log(this.state)
+        console.log(this.props.users);
         const USER = this.state.users[this.state.currentUser];
         return (
             <Hoc>
@@ -209,4 +212,16 @@ class ChatContainer extends Component {
 }
 
 
-export default ChatContainer
+const mapStateToProps = state => {
+    return {
+        users: state.users.users
+    };
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        addUsers: () => dispatch({type:"USERS",payload:"something"}),
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(ChatContainer)
