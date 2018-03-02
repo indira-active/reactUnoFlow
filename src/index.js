@@ -6,6 +6,7 @@ import {BrowserRouter} from "react-router-dom"
 import { Provider } from 'react-redux';
 import users from "./reducers/users"
 import thunk from 'redux-thunk';
+import './index.css';
 import { createStore,combineReducers,compose,applyMiddleware} from 'redux';
 
 const composeEnhancers = compose;
