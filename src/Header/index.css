@@ -2,11 +2,11 @@
 	display: grid;
 	height: 100%;
 	width: 100%;
-	grid-template-areas: "x x x x x"
-						 "Home Search Chat Filter Users"
-						 "y y y y y";
-	grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
-	grid-gap: 5px; 
+	grid-template-areas: "x x x x"
+						 "Home Search Chat Users"
+						 "y y y y";
+	grid-template-columns: 20% 20% 20% 20%;
+	justify-content: space-around;
 	grid-template-rows: 33.3% 33.3% 33.3%;
 	overflow: hidden;
 }

@@ -1,12 +1,4 @@
 
-    .container-header {
-      grid-area:a;
-      text-align: center;
-      box-sizing: border-box;
-      font-size: 30px;
-      color: black;
-    }
-    
     .App-title {
       font-size: 1.5em;
     }
@@ -17,34 +9,39 @@
     .container {
       display: grid;
       height: 100%;
-      grid-template-areas: ;
      grid-template-columns: 1fr;
      grid-template-areas:    "h"
                              "b"
                              "b"
                              "b"
                              "b"
+                             "b"
                              "f";
-     grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr;
-      grid-gap:10px;
+     grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+      overflow: hidden;
       box-sizing: border-box;
     background-color: #eaffff;
     height: 100vh;
+    width: 100vw;
     overflow: hidden !important;
     letter-spacing: -1px;    
     }
     .container-header{
       font-size: 20px;
+      display: grid;
       grid-area: h;
     }
     .item-container{
       grid-area: b;
       display: grid;
-      grid-gap: 7%;
-      padding: 1%;
+      width: 100%;
+      grid-column-gap: 10px;
+      grid-row-gap: 20px;
+      padding: 20px;
       overflow: scroll;
+      justify-content: space-around;
       grid-template-rows: repeat(5,14%);
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(auto-fit,minmax(40vw,1fr));
     }
     
     .name {
@@ -107,23 +104,43 @@
     .item{
       display: grid;
       height: 100%;
-      width: 100%;
-      padding: 3%;
+      padding: 1%;
       font-family: sans-serif;
       font-weight: 900;
       color:black;
+      grid-gap: 4px;
       background-color: #eaffea;
-      justify-content: space-around;
       grid-template-areas:
-            "name  userid  button"
-            "date    date    button";
-            grid-template-columns: 1fr 1fr 1fr;
-            grid-template-rows: 50% 50%;
+            "date  userid  button"
+            "date   userid    button";
+            grid-template-columns: auto 1fr auto;
+            grid-template-rows: 1fr 1fr;
       border-radius: 5%;
       box-sizing: border-box;
       font-size: 1em;
     }
-    
+    .all{
+      color:black;
+      display: grid;
+      overflow: hidden;
+    justify-content: space-between;
+    grid-template-columns: repeat(auto-fit,minmax(200px,1fr));
+    grid-auto-rows: 1fr;
+    width: 100%;
+    height: 100%;
+    }
+    .all div{
+      display: inline-block;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis; 
+    }
+    .all a{
+      display: inline;
+      width: auto;
+      overflow: hidden;
+      text-align: right;
+    }
     .item p {
       margin: 0 0 0 0;
       padding: 0;
@@ -132,7 +149,9 @@
     }
     .item span {
       margin: 0 0 0 0;
+      padding:0;
       text-align: left;
+      max-width: 100%;
       font-size: 1em;
     }
     .item button {
@@ -144,27 +163,21 @@
     }
   
         
-    @media (min-width: 1400px) {
+/*    @media (max-width: 1200px) {
       .item-container{
       grid-area: b;
       display: grid;
       justify-content: space-around;
-      grid-gap: 7%;
-      padding: 1%;
-      overflow: scroll;
       grid-template-rows: repeat(5,14%);
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 40% 40%;
     }
         
-    }
+    }*/
   @media (max-width: 900px) {
       .item-container{
       grid-area: b;
       display: grid;
       justify-content: space-around;
-      grid-gap: 7%;
-      padding: 1%;
-      overflow: scroll;
       grid-template-rows: repeat(10,1fr);
       grid-template-columns: 1fr;
     }
@@ -177,12 +190,11 @@
       .item{
       
       grid-template-areas:
-            "name"
             "userid"
             "date"
             "button";
             grid-template-columns: 90%;
-            grid-template-rows: 1fr 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr;
             justify-content: space-between;
     }
     .pagination{

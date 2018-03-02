@@ -1,7 +1,8 @@
 
 
 const initialState = {
-    users: []
+    users: [],
+    currentUser:4
 };
 
 const reducer = ( state = initialState, action ) => {
@@ -9,6 +10,10 @@ const reducer = ( state = initialState, action ) => {
         case 'USERS': return {
         	...state,
             users:[...action.payload]
+        };
+        case 'CURRENT': return {
+        	...state,
+            currentUser:action.payload
         };
 
         default: return state;

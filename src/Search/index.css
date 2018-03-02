@@ -1,0 +1,82 @@
+.parent{
+	padding:20px;
+}
+.totalGrid{
+	display: grid;
+	grid-template-columns: 70% 10%;
+	grid-auto-rows:auto;
+	justify-content: space-between;
+	width: 100%;
+	height: 100%;
+	grid-column-gap: 10px;
+}
+.totalGrid p{
+	text-align: left;
+	border: black 2px;
+	box-shadow: 1px 1px 0px black;
+	margin:0;
+	font-weight: 900;
+	padding:5px;
+}
+.totalGrid a{
+	text-align: right;
+		border: black 2px;
+	box-shadow: 1px 1px 0px black;
+	margin:0;
+	font-weight: 900;
+	padding:5px;
+}
+.form{
+	display: grid;
+	grid-template-columns: 5% 60% 10% 20% 5%;
+	grid-template-areas: "c t b s a";
+	grid-template-rows: 1fr;
+	height: 100%;
+	width: 100%;
+	overflow: hidden
+}
+.form input[type="submit"]{
+	outline: none !important;
+	grid-area: s;
+	padding:5px;
+	background-color: aquamarine;
+		border-radius: 20%;
+	box-shadow: 1px 1px 0px #f1bdb1
+}
+.form input[type="text"]{
+	outline: none !important;;
+	grid-area: t;
+	padding:5px;
+	background-color: #f1bdb1;
+		border-radius: 10px;
+	box-shadow:1px 1px 0px aquamarine
+}
+@media (max-width: 600px){
+	.totalGrid{
+	grid-template-columns: 70% auto;
+	grid-auto-flow: row;
+	grid-auto-rows:auto;
+	justify-content: space-between;
+	height: 100%;
+	grid-column-gap: none;
+}
+.parent{
+	padding:10px 0px 0px 0px;
+}
+.totalGrid p {
+	overflow: hidden;
+    max-width: 200px;
+    font-weight: 900;
+    text-overflow: ellipsis;
+	}
+.form{
+	display: grid;
+	grid-template-columns: 60% auto;
+	grid-template-areas: "t s";
+	grid-template-rows: 1fr;
+	justify-content: space-between;
+	height: 100%;
+	width: 100%;
+	overflow: hidden
+}
+}

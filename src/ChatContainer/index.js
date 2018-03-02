@@ -5,6 +5,7 @@ import { Button} from "react-bootstrap"
 import classes from './index.css';
 import io from 'socket.io-client'
 import { connect } from 'react-redux';
+import Spinner from "../components/Spinner";
 
 import clone from 'clone'
 
@@ -13,24 +14,24 @@ const socket = io('https://damp-plateau-11898.herokuapp.com/');
 
 class ChatContainer extends Component {
     state = {
-        users: [{
-            userId: "andrewjameswilliams1995@gmail.com",
-            _id: "68c03f415fce99c4be3f7156",
-            messages: [{ content: "hello there", username: "admin" }],
-            unread:0,
-            notCalled:true
-        }],
-        currentUser: 0
+        users:[],
+        currentUser:0
     }
     componentDidMount() {
-        this.socketCall()
         this.loadUsers()
+        this.socketCall()
         socket.on('reset',()=>{
             this.loadUsers()
         })
+    
     }
-    loadUsers = () => {
-        fetch('https://damp-plateau-11898.herokuapp.com/api/loadusers')
+    componentDidUpdate(nextProps,nextState){
+        if(nextProps.users.length>1 && this.state.users.length <1){
+            this.updatePage();
+        }
+    }
+    loadUsers(){
+       /* fetch('https://damp-plateau-11898.herokuapp.com/api/loadusers')
         .then(res => res.json())
         .then(load=>{
             const users = load.map(val=>{
@@ -43,7 +44,33 @@ class ChatContainer extends Component {
                 }
             })
             this.setState({users,currentUser:0})
-        }).catch(err=>{console.log('err is happening',err)})
+        }).catch(err=>{console.log('err is happening',err)})*/
+            /*const currentUser = this.props.users.map((x,location)=>{return{...x,location}}).find((val, index) => {
+                            return (val.location === this.props.currentUser) || (val._id === this.props.currentUser)
+                        });*/
+            if(this.props.users>1){
+               this.updatePage()
+            }else{
+                this.props.refresh();
+            }
+                
+    }
+    updatePage = ()=>{
+        new Promise((resolve,reject)=>{
+                        let currentUser = null;
+                        this.props.users.filter((val, location) => {
+                    currentUser = currentUser ? currentUser : (location === this.props.currentUser || (val._id === this.props.currentUser) ? resolve({...val,
+                        location
+                    }) : null)
+                    return (val._id === this.props.currentUser) || (location === this.props.currentUser)
+                    })
+                }).then(currentUser=>{
+                    this.setState({
+                        users: [...this.props.users],
+                        currentUser:currentUser?currentUser.location:7
+                        })
+                    this.callUsers(currentUser._id,currentUser.userId,currentUser.location);
+                })
     }
     socketCall = () => {
         socket.on('testEvent', message => {
@@ -51,9 +78,6 @@ class ChatContainer extends Component {
             if(msg.trigger === 'merge:appUser'){
                 console.log(msg)
                 this.postDone(msg.discarded[0]._id,msg.surviving._id,msg.surviving.userId);
-                setTimeout(() => {
-                  this.loadUsers();
-                }, 400)
                 alert(`${msg.discarded[0]._id} is merging with ${msg.surviving.userId} aka ${msg.surviving._id}`)
             }
             if (msg.trigger === 'message:appUser') {
@@ -235,16 +259,16 @@ class ChatContainer extends Component {
 
         })
     }
-    render() {
-        console.log(this.state)
-        console.log(this.props.users);
-        const USER = this.state.users[this.state.currentUser];
-        return (
-            <Hoc>
-                <div style={{ height: "10vh", overflow: "scroll" }}>{USER?this.state.users.sort((a,b)=>{
+    /*.sort((a,b)=>{
                     const status = b.unread - a.unread;
                     return status != 0?status:(a.userId.replace(/@/g,'')>b.userId.replace(/@/g,'')?1:-1);
-                }).map(
+                })*/
+    render() {
+        console.log(this.state)
+        const USER = this.state.users[this.state.currentUser];
+        return !this.state.users.length?(<Spinner/>):(
+            <Hoc>
+                <div style={{ height: "10vh", overflow: "scroll" }}>{USER?this.state.users.map(
                     (user, index) => {
                         return (
                             <div key={user._id+Date.now()+Math.random()} style={{ display: 'inline-block', margin: "3px",position:'relative'}}>
@@ -284,13 +308,15 @@ class ChatContainer extends Component {
 
 const mapStateToProps = state => {
     return {
-        users: state.users.users
+        users: state.users.users,
+        currentUser:state.users.currentUser
     };
 }
 
 const mapDispatchToProps = dispatch => {
     return {
         addUsers: () => dispatch({type:"USERS",payload:"something"}),
+        changeCurrentUser: (currentUser) => dispatch({type:"CURRENT",payload:currentUser}),
     }
 }
 
