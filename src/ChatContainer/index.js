@@ -267,7 +267,7 @@ class ChatContainer extends Component {
         console.log(this.state)
         const USER = this.state.users[this.state.currentUser];
         return !this.state.users.length?(<Spinner/>):(
-            <Hoc>
+            <div style={{position:"fixed"}}>
                 <div style={{ height: "10vh", overflow: "scroll" }}>{USER?this.state.users.map(
                     (user, index) => {
                         return (
@@ -300,7 +300,7 @@ class ChatContainer extends Component {
                       currentIndex={this.state.currentUser}
                        currentUser={USER} messages={USER.messages} />
                 </div>):null}
-            </Hoc>
+            </div>
         )
     }
 }
