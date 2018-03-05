@@ -51,6 +51,21 @@
 		border-radius: 10px;
 	box-shadow:1px 1px 0px aquamarine
 }
+.date{
+	display: inline-block;
+	padding: 10px;
+	margin: 7px;
+	outline:none !important;
+}
+.userId{
+	display: inline-block;
+	padding: 10px;
+	margin:7px;
+	outline:none !important;
+}
+.active{
+	background-color: #32cd32;
+}
 @media (max-width: 600px){
 	.totalGrid{
 	grid-template-columns: 70% auto;

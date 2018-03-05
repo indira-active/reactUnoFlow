@@ -18,11 +18,59 @@ class ChatContainer extends Component {
         currentUser:0
     }
     componentDidMount() {
+     /*   this.loadUsers()*/
         this.socketCall()
         socket.on('reset',()=>{
-            this.props.refresh();
+            this.loadUsers()
         })
     
+    }
+    componentDidUpdate(nextProps,nextState){
+       /* if(nextProps.users.length>1 && this.props.users.length <1){
+            this.updatePage();
+        }*/
+    }
+    loadUsers(){
+       /* fetch('https://damp-plateau-11898.herokuapp.com/api/loadusers')
+        .then(res => res.json())
+        .then(load=>{
+            const users = load.map(val=>{
+                return{
+                    userId:val.smoochUserId?val.smoochUserId:`anonymous:${val.smoochId}`,
+                    _id:val.smoochId,
+                    messages:[],
+                    notCalled:true,
+                    unread:0
+                }
+            })
+            this.props.reconcileState({users,currentUser:0})
+        }).catch(err=>{console.log('err is happening',err)})*/
+            /*const currentUser = this.props.users.map((x,location)=>{return{...x,location}}).find((val, index) => {
+                            return (val.location === this.props.currentUser) || (val._id === this.props.currentUser)
+                        });*/
+            if(this.props.users>1){
+               this.updatePage()
+            }else{
+                this.props.refresh();
+            }
+                
+    }
+    updatePage = ()=>{
+        new Promise((resolve,reject)=>{
+                        let currentUser = null;
+                        this.props.users.filter((val, location) => {
+                    currentUser = currentUser ? currentUser : (location === this.props.currentUser || (val._id === this.props.currentUser) ? resolve({...val,
+                        location
+                    }) : null)
+                    return (val._id === this.props.currentUser) || (location === this.props.currentUser)
+                    })
+                }).then(currentUser=>{
+                    this.props.reconcileState({
+                        users: [...this.props.users],
+                        currentUser:currentUser?currentUser.location:7
+                        })
+                    this.callUsers(currentUser._id,currentUser.userId,currentUser.location);
+                })
     }
     socketCall = () => {
         socket.on('testEvent', message => {
@@ -211,10 +259,14 @@ class ChatContainer extends Component {
 
         })
     }
+    /*.sort((a,b)=>{
+                    const status = b.unread - a.unread;
+                    return status != 0?status:(a.userId.replace(/@/g,'')>b.userId.replace(/@/g,'')?1:-1);
+                })*/
     render() {
         console.log(this.props)
         const USER = this.props.users[this.props.currentUser];
-        return !this.props.users?(<Spinner/>):(
+        return !this.props.users.length?(<Spinner/>):(
             <div style={{position:"fixed"}}>
                 <div style={{ height: "10vh", overflow: "scroll" }}>{USER?this.props.users.map(
                     (user, index) => {

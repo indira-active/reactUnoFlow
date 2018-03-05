@@ -5,6 +5,8 @@ import registerServiceWorker from './registerServiceWorker';
 import {BrowserRouter} from "react-router-dom"
 import { Provider } from 'react-redux';
 import users from "./reducers/users"
+import mappedUsers from "./reducers/mappedUsers"
+
 import thunk from 'redux-thunk';
 import './index.css';
 import { createStore,combineReducers,compose,applyMiddleware} from 'redux';
@@ -12,7 +14,8 @@ import { createStore,combineReducers,compose,applyMiddleware} from 'redux';
 const composeEnhancers = compose;
 
 const rootReducer = combineReducers({
-    users
+    users,
+    mappedUsers
 });
 const store = createStore(rootReducer,composeEnhancers(
     applyMiddleware(thunk)

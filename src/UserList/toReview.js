@@ -15,12 +15,29 @@ class UserList extends Component {
     show:false
   }
   setUze = (val)=>{
-    this.props.reconcileMappedState({currentPage:val});
+    this.props.reconcileState({currentPage:val});
   }
   changeShow = ()=>{
     this.setState({show:!this.state.show})
   }
-
+/*componentDidMount(){
+        if(this.props.users.length>1){
+               const right = Math.floor(this.props.users.length/10)>5?5:Math.floor(this.props.users.length/10);
+              this.setState({tabs:['Home','Search','Chat','Users'],currentPage:0,users:[...this.props.users],left:0,right,quotient:right,userAmount:Math.floor(this.props.users.length/10)})
+            }else{
+            this.props.refresh();
+            setTimeout(() => {
+                const right = Math.floor(this.props.users.length/10)>5?5:Math.floor(this.props.users.length/10);
+                this.setState({tabs:['Home','Search','Chat','Users'],currentPage:0,users:[...this.props.users],left:0,right,quotient:right,userAmount:Math.floor(this.props.users.length/10)})
+            },300)
+    }
+  }
+  componentDidUpdate(nextProps,nextState){
+        if(nextProps.users.length>1 && this.props.users.length <1){
+            const right = Math.floor(this.props.users.length/10)>5?5:Math.floor(this.props.users.length/10);
+              this.setState({tabs:['Home','Search','Chat','Users'],currentPage:0,users:[...this.props.users],left:0,right,quotient:right,userAmount:Math.floor(this.props.users.length/10)})
+        }
+    }*/
   next = ()=>{
     let left = this.props.left;
     let right = this.props.right;
@@ -35,7 +52,7 @@ class UserList extends Component {
     }else if(currentPage<right){
       currentPage = currentPage + 1
     }
-    this.props.reconcileMappedState({
+    this.props.reconcileState({
       left,right,currentPage
     })
   }
@@ -53,22 +70,30 @@ class UserList extends Component {
     }else if(currentPage>left){
       currentPage = currentPage - 1
     }
-    this.props.reconcileMappedState({
+    this.props.reconcileState({
       left,right,currentPage
     })
   }
 
   render() {
-    const unWound = this.props.users;
-    console.log(this.props)
-      if(unWound.length > 0){
-          const MU = this.props.mappedUsers;
+     console.log(this.props)
+      if(this.props.users.length > 0){
+
           const uze = this.props.currentPage;
-          const length = unWound.length;
+          const length = this.props.users.length;
           const left = Math.min(this.props.left,this.props.right-this.props.quotient);
           const right = this.props.right;
           const pages = Array(Math.floor(length/10)).fill(null).map((x,y)=>y);
-          /*{this.props.users.map((element,index)=>{return {...element,index}}).slice(this.props.currentPage*10,(this.props.currentPage*10)+10).map((x,y)=>{
+          console.log(this.props)
+          return (
+            <Hoc>
+            <Search show={this.props.show} modalClosed={this.changeShow}/>
+              <div className={classes.container}>
+                  <header className={classes['container-header']}>
+                      <Header changeShow={this.changeShow} tabs={this.props.tabs}/>
+                  </header>
+                <div className={classes['item-container']}>
+                  {this.props.users.map((element,index)=>{return {...element,index}}).slice(this.props.currentPage*10,(this.props.currentPage*10)+10).map((x,y)=>{
                    return(
                         <div className={classes.item} key={y+1}>
                            <div className={classes.userid+' '+' '+classes.all}>
@@ -77,26 +102,6 @@ class UserList extends Component {
                            </div>
                            <span className={classes.date+' '+classes.all} >Date entered: {new moment(x.date).format("MMM Do YY")}</span>
                            <Link to='/Chat' onClick={(e)=>{e.preventDefault();this.props.changeCurrentUser(x.index);this.props.history.push('/Chat')}} className={classes.button+' '+classes.all} >Chat</Link>
-                        </div>
-                        )
-                })}*/
-          return (
-            <Hoc>
-            <Search show={this.state.show} modalClosed={this.changeShow}/>
-              <div className={classes.container}>
-                  <header className={classes['container-header']}>
-                      <Header changeShow={this.changeShow} tabs={this.props.tabs}/>
-                  </header>
-                <div className={classes['item-container']}>
-                  {unWound.slice(this.props.currentPage*10,(this.props.currentPage*10)+10).map((x,y)=>{
-                   return(
-                        <div className={classes.item} key={x}>
-                           <div className={classes.userid+' '+' '+classes.all}>
-                             <div>{MU[x].userId} </div>
-                             <div style={{marginLeft:"2px"}}>{x}</div>
-                           </div>
-                           <span className={classes.date+' '+classes.all} >Date entered: {new moment(MU[x].date).format("MMM Do YY")}</span>
-                           <Link to='/Chat' onClick={(e)=>{e.preventDefault();this.props.changeCurrentUser(x);this.props.history.push('/Chat')}} className={classes.button+' '+classes.all} >Chat</Link>
                         </div>
                         )
                 })}
@@ -108,7 +113,7 @@ class UserList extends Component {
                   {pages.slice(left,right+1).map((val,index)=>{
                     return (              
                     <button 
-                      key={val} 
+                      key={index} 
                       style={{backgroundColor:val===uze?'aquamarine':''}}
                       onClick={()=>{this.setUze(val)}}>{val+1}</button>
                     )
@@ -129,15 +134,12 @@ class UserList extends Component {
 
 const mapStateToProps = state => {
     return {
-        users: Object.keys(state.mappedUsers.users),
-        quotient:state.mappedUsers.quotient,
-        currentUser:state.mappedUsers.currentUser,
-        currentPage:state.mappedUsers.currentPage,
-        userAmount:state.mappedUsers.userAmount,
-        left:state.mappedUsers.left,
-        right:state.mappedUsers.right,
-        tabs:state.mappedUsers.tabs,
-        mappedUsers:state.mappedUsers.users
+        users: state.users.users,
+        currentUser:state.users.currentUser,
+        currentPage:state.users.currentPage,
+        left:state.users.left,
+        right:state.users.right,
+        tabs:state.users.tabs
     };
 }
 
@@ -145,8 +147,9 @@ const mapDispatchToProps = dispatch => {
     return {
         addUsers: () => dispatch({type:"USERS",payload:"something"}),
         changeCurrentUser: (currentUser) => dispatch({type:"CURRENT",payload:currentUser}),
-        reconcileState:(payload)=>dispatch({type:"CHANGEPAGEVALUES",payload}),
+        reconcileState:(payload)=>dispatch({type:"CHANGEPAGEVALUES",payload})
         reconcileMappedState:(payload)=>dispatch({type:"CHANGEMAPPEDVALUES",payload})
+
     }
 }
 

@@ -8,13 +8,13 @@ import classes from "./index.css"
 class Search extends Component {
 	state ={
 		text:'',
-		searchResults:null
+		searchResults:null,
+		filter:"userId"
 	}
 	fetchResults = (q)=>{
 		fetch('https://damp-plateau-11898.herokuapp.com/api/search?q='+q)
         .then(res => res.json())
         .then(load=>{
-        	console.log(load);
             this.setState({searchResults:load})
         }).catch(err=>{console.log('err is happening',err)})
 
@@ -28,13 +28,20 @@ class Search extends Component {
 		this.props.modalClosed();
 	}
 	render(){
-		console.log(this.props)
 		return(
 			<Modal show={this.props.show} modalClosed={this.clickHandler}>
 				<form className={classes.form} onSubmit={(event)=>{event.preventDefault()}}>
 						<input onChange={(event)=>{this.setState({text:event.target.value})}} value={this.state.text} type="text" style={{width:"100%",height:"100%"}} placeholder='e.g john@gmail.com'/>
 						<input onClick={()=>{this.fetchResults(this.state.text)}} type="submit" value='search'/>
 				</form> 
+					<div>{['date','userId'].map((value,index)=>(
+						<button 
+							onClick={()=>{this.setState({filter:value})}}
+							key={index}
+							className={this.state.filter === value?`${classes[value]} ${classes.active}`:classes[value]}>
+							{value}
+						</button>))}
+					</div>
 				<div className={classes.parent}>
 					{this.state.searchResults !== null?(this.state.searchResults.map((val,index)=>{
 						const result = (

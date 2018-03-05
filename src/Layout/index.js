@@ -11,29 +11,21 @@ class Layout extends Component {
 	     users:null
 	  }	
 	componentDidMount(){
-		fetch('https://damp-plateau-11898.herokuapp.com/api/loadusers')
-        .then(res => res.json())
-        .then(load=>{
-            const users = load.map(val=>{
-              console.log(val,'val')
-                return{
-                    userId:val.smoochUserId?val.smoochUserId:`anonymous:${val.smoochId}`,
-                    _id:val.smoochId,
-                    messages:[],
-                    notCalled:true,
-                    unread:0,
-                    date:val.created
-                }
-            })
-            this.props.addUsers(users)
-        }).catch(err=>{console.log('err is happening',err)})
+		this.refresh();
 	}
     refresh = ()=>{
         fetch('https://damp-plateau-11898.herokuapp.com/api/loadusers')
         .then(res => res.json())
         .then(load=>{
+            const mappedUsers = {}
             const users = load.map(val=>{
-              console.log(val,'val')
+                mappedUsers[val.smoochId] = {
+                    userId:val.smoochUserId?val.smoochUserId:`anonymous:${val.smoochId}`,
+                    messages:[],
+                    notCalled:true,
+                    unread:0,
+                    date:val.created
+                }
                 return{
                     userId:val.smoochUserId?val.smoochUserId:`anonymous:${val.smoochId}`,
                     _id:val.smoochId,
@@ -43,11 +35,13 @@ class Layout extends Component {
                     date:val.created
                 }
             })
+            const right = Math.floor(users.length/10)>5?5:Math.floor(users.length/10);
+            this.props.reconcileMappedState({users:mappedUsers,right,quotient:right,userAmount:Math.floor(users.length/10)})
+            this.props.reconcileState({right,quotient:right,userAmount:Math.floor(users.length/10)})
             this.props.addUsers(users)
         }).catch(err=>{console.log('err is happening',err)})
     }
 	render(){
-        console.log(this.props.users)
 		return this.props.users?( <Switch>
         <Route path="/Chat" render={()=>{return (<ChatContainer refresh={this.refresh} />)}} />
         <Route path="/Users" render={()=>{return (<UserList refresh={this.refresh} />)}} />
@@ -64,13 +58,19 @@ class Layout extends Component {
 	
 const mapStateToProps = state => {
     return {
-        users: state.users.users
+        users: state.users.users,
+        currentPage:state.users.currentPage,
+        left:state.users.left,
+        right:state.users.right,
+        mappedUsers:state.mappedUsers.users
     };
 }
 
 const mapDispatchToProps = dispatch => {
     return {
         addUsers: (payload) => dispatch({type:"USERS",payload}),
+        reconcileState:(payload)=>dispatch({type:"CHANGEPAGEVALUES",payload}),
+        reconcileMappedState:(payload)=>dispatch({type:"CHANGEMAPPEDVALUES",payload})
     }
 }
 

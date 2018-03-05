@@ -1,7 +1,6 @@
 
-
 const initialState = {
-    users: [],
+    users: {},
     currentUser:0,
     currentPage:0,
     left:0,
@@ -13,15 +12,15 @@ const initialState = {
 
 const reducer = ( state = initialState, action ) => {
     switch ( action.type ) {
-        case 'USERS': return {
+        case 'MAPPEDUSERS': return {
         	...state,
-            users:[...action.payload]
+            users:{...action.payload}
         };
-        case 'CURRENT': return {
+        case 'MAPPEDCURRENT': return {
         	...state,
             currentUser:action.payload
         };
-        case 'CHANGEPAGEVALUES': return {
+        case 'CHANGEMAPPEDVALUES': return {
             ...state,
             ...action.payload
         };
