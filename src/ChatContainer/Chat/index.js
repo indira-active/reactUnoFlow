@@ -3,12 +3,15 @@ import classes from './index.css';
 import Hoc from "./../../hoc"
 import ReactDOM from 'react-dom';
 import CircularJSON from "circular-json"
+import Spinner from "../../components/Spinner";
+//need to add an ability to wipe unread messages
 
 class Chat extends Component {
   state = {
             text:"",
             shouldScroll:true,
-            stopScroll:false
+            stopScroll:false,
+            shouldAutoScroll:true
         }
         scrollToBottom = () => {
             const {thing} = this.refs;
@@ -16,20 +19,22 @@ class Chat extends Component {
           }
           
           componentDidUpdate(nextprops,nextstate) {
-                console.log(nextprops,'nextprops')
-                    setTimeout(() => {
-                        if(this.state.shouldScroll)
-                        {
-                         this.scrollToBottom();  
-                         }
-                    }, 50)
-          }
-          componentWillUpdate(newProps,state2){
-            if(newProps.messages.length === this.props.messages.length && this.state.shouldScroll){
-                this.setState({shouldScroll:false})
-            }else if(newProps.messages.length !== this.props.messages.length && !this.state.shouldScroll){
-                this.setState({shouldScroll:true})
+            if(this.state.shouldAutoScroll){
+                this.scrollToBottom()
             }
+            
+          }
+          componentWillReceiveProps = (nextprops)=>{
+            if (Object.keys(this.props.mUserIdMessages).length !== Object.keys(nextprops.mUserIdMessages).length){
+                this.scrollToBottom();
+                this.setState({shouldAutoScroll:true})
+            }else{
+                this.setState({
+                    shouldAutoScroll:false
+                })
+            }
+
+
           }
 
 
@@ -37,102 +42,89 @@ class Chat extends Component {
     submitMessage(e) {
         e.preventDefault();
         this.props.newMessage({
-            _id:this.props.currentUser._id,
+            _id:this.props.mUserId,
             content:this.state.text,
-            username:"admin"
+            username:"admin",
+            onClient:true
         })
         this.setState({
             text:""
         })
     }
     changeReadMore = (messageId)=>{
-        this.props.changeReadMore(messageId)
+        this.props.changeReadMoreMapped(messageId)
+        console.log(messageId);
+    }
+    readMoreController = (chat)=>{
+    	if(chat.readMore){
+    		return chat.content.slice(0,Math.min(chat.content.length,140));
+    	}else{
+    		return chat.content
+    	}
+    }
+    readMoreButtonController = (chat,id)=>{
+	    if(chat.readMore){
+	    	return (<button onClick={()=>{this.changeReadMore(id)}} style={{marginLeft:"5px"}}>read more ...</button>)
+	    }else{
+	    	return null
+	    }
     }
     typeHandler = (event)=>{
         this.setState({
             text:event.target.value
         })
     }
+    stopScroll = (chat) => {
+        if (chat.content.length > 140 && !chat.readMore){
+                this.setState({
+                stopScroll: false
+            })
+                this.focusDiv();
+        }
+    }
     focusDiv(ref) {
       ReactDOM.findDOMNode(this.refs['thing']).focus();
     }
+    generateChats(isAdmin,isFirst,chat,id){
+    	const arrToReturn = [];
+    	if(isFirst){
+    		arrToReturn.push((<div key={id+'1'} className={isAdmin?classes.rightHr:classes.leftHr}><br/><hr/></div>))
+   
+    	arrToReturn.push(<div key={id+'2'} 
+    		className={isAdmin?classes.right:classes.left + " "+ classes.chatParagraph} 
+    		style={{fontWeight:"900",padding:"0"}}>
+          <h4>{chat.username}</h4>
+            </div>)
+    	}
+    	arrToReturn.push((<div 
+    		key={id+'3'} className={(isAdmin?classes.right:classes.left) + " "+ classes.chatParagraph}>                                
+          <div  onClick={()=>{if(chat.content.length>140&&!chat.readMore) this.setState({stopScroll:!this.state.stopScroll})}} 
+          onMouseLeave = {()=>this.stopScroll(chat)}
+          >{this.readMoreController(chat)}
+	          {this.readMoreButtonController(chat,id)}</div> 
+          </div>))
+    	return arrToReturn
+    }
 
     render() {
+        console.log(this.props)
+        if(this.props.mUserIdMessages){
         const username = "admin";
-        const chats = this.props.messages;
+        const chats = Object.keys(this.props.mUserIdMessages);
+        const chatContent = this.props.mUserIdMessages;
+        const userId = this.props.mUserId;
         const userValues = []
-        console.log(userValues)
-        if(chats){
-            chats.forEach((chat,index,arr) => {
-                        const elementBefore = (index-1)>-1?arr[index-1]:false
-                        if(chat.username == "admin" && (elementBefore && elementBefore.username) == "admin"){
-                            userValues.push(<div key={(chat.id||(Math.random()+Date.now()%Math.random()+'')) +'2'+chat.authorId} className={classes.right + " "+ classes.chatParagraph}>                                
-                                <div  onClick={()=>{if(chat.content.length>140&&!chat.readMore)this.setState({stopScroll:!this.state.stopScroll})}} onMouseEnter={()=>{
-                                    /*this.focusDiv('refno'+index)*/
-                                }} onMouseLeave = {()=>{
-                                    if(chat.content.length>140&&!chat.readMore){
-                                    this.setState({stopScroll:false})
-                                    this.focusDiv('refno'+index)
-                                    }
-                                    
-                                }}ref={'refno'+index}>{chat.readMore?chat.content.slice(0,Math.min(chat.content.length,140)):chat.content}{chat.readMore?<button onClick={()=>{this.changeReadMore(chat.id)}} style={{marginLeft:"5px"}}>read more ...</button>:null}</div>
-                            </div>)
-                        }else if(chat.username == "admin"){
-                            userValues.push((<div key={(chat.id||(Math.random()+Date.now()%Math.random()+'')) +'3'+chat.authorId} className={classes.rightHr}>
-                                <br/>
-                                <hr/>
-                            </div>),<div key={(chat.id||(Math.random()+Date.now()%Math.random()+''))+'1'+chat.authorId} className={classes.right + " "+ classes.chatParagraph} style={{fontWeight:"900",padding:"0"}}>
-                        
-                                <h4>{chat.username}</h4>
-                            </div>,<div key={(chat.id||(Math.random()+Date.now()%Math.random()+'')) +'2'+chat.authorId} className={classes.right + " "+ classes.chatParagraph}>                                
-                                <div  onClick={()=>{if(chat.content.length>140&&!chat.readMore)this.setState({stopScroll:!this.state.stopScroll})}} onMouseEnter={()=>{
-                                    /*this.focusDiv('refno'+index)*/
-                                }} onMouseLeave = {()=>{
-                                    if(chat.content.length>140&&!chat.readMore){
-                                    this.setState({stopScroll:false})
-                                    this.focusDiv('refno'+index)
-                                    }
-                                    
-                                }}ref={'refno'+index}>{chat.readMore?chat.content.slice(0,Math.min(chat.content.length,140)):chat.content}{chat.readMore?<button onClick={()=>{this.changeReadMore(chat.id)}} style={{marginLeft:"5px"}}>read more ...</button>:null}</div>
-                            </div>)
-                        }else if(chat.username == (elementBefore && elementBefore.username)){
-                            
-                            userValues.push(<div key={(chat.id||(Math.random()+Date.now()%Math.random()+'')) +'2'+chat.authorId} className={classes.left + " "+ classes.chatParagraph}>                                
-                                <div  onClick={()=>{if(chat.content.length>140&&!chat.readMore)this.setState({stopScroll:!this.state.stopScroll})}} onMouseEnter={()=>{
-                                    /*this.focusDiv('refno'+index)*/
-                                }} onMouseLeave = {()=>{
-                                    if(chat.content.length>140&&!chat.readMore){
-                                    this.setState({stopScroll:false})
-                                    this.focusDiv('refno'+index)
-                                    }
-                                    
-                                }}ref={'refno'+index}>{chat.readMore?chat.content.slice(0,Math.min(chat.content.length,140)):chat.content}{chat.readMore?<button onClick={()=>{this.changeReadMore(chat.id)}} style={{marginLeft:"5px"}}>read more ...</button>:null}</div>
-                            </div>)
-
-                        } 
-                        else{
-                            
-                            userValues.push((<div key={(chat.id||(Math.random()+Date.now()%Math.random()+'')) +'3'+chat.authorId} className={classes.leftHr}>
-                                <br/>
-                                <hr/>
-                            </div>),<div key={(chat.id||(Math.random()+Date.now()%Math.random()+''))+'1'+chat.authorId} className={classes.left + " "+ classes.chatParagraph} style={{fontWeight:"900",padding:"0"}}>
-                                <h4>{chat.username}</h4>
-                            </div>,<div key={(chat.id||(Math.random()+Date.now()%Math.random()+'')) +'2'+chat.authorId} className={classes.left + " "+ classes.chatParagraph}>                                
-                                <div  onClick={()=>{if(chat.content.length>140&&!chat.readMore)this.setState({stopScroll:!this.state.stopScroll})}} onMouseEnter={()=>{
-                                    /*this.focusDiv('refno'+index)*/
-                                }} onMouseLeave = {()=>{
-                                    if(chat.content.length>140&&!chat.readMore){
-                                    this.setState({stopScroll:false})
-                                    this.focusDiv('refno'+index)
-                                    }
-                                    
-                                }}ref={'refno'+index}>{chat.readMore?chat.content.slice(0,Math.min(chat.content.length,140)):chat.content}{chat.readMore?<button onClick={()=>{this.changeReadMore(chat.id)}} style={{marginLeft:"5px"}}>read more ...</button>:null}</div>
-                            </div>)
-
-                        }
-                    })
+        if(chats.length>0){
+            chats.forEach((chatId,index,arr) => {
+              const message = chatContent[chatId];
+              let usernameBefore = index===0?false:chatContent[arr[index-1]].username
+            userValues.push(...this.generateChats(message.username==="admin",
+                message.username!==usernameBefore,
+                message,
+                chatId
+                ))
+            })
         }
-
         return (
             <div className={classes.CHAT}>
                 <h3>Indira({this.props.currentUser.userId})</h3>
@@ -140,12 +132,19 @@ class Chat extends Component {
                     {chats?userValues:null}
                 </div>
                 <form ref={(el) => { this.messagesEnd = el; }} className={classes.input} onSubmit={(e) => this.submitMessage(e)}>
-                    <input type="text" onFocus={()=>this.props.wipeUnread(this.props.currentIndex)} value={this.state.text} onChange={this.typeHandler} />
+                    <input type="text" value={this.state.text} onChange={this.typeHandler} />
                     <input type="submit" value="Submit" />
                 </form>
             </div>
-        );
+        )
+    }else{
+        return <Spinner/>
+    }
+
+    
     }
 }
 
 export default Chat;
+
+

@@ -20,6 +20,9 @@ class UserList extends Component {
   changeShow = ()=>{
     this.setState({show:!this.state.show})
   }
+  changeCurrentUser = (x)=>{
+    this.props.changeCurrentMappedUser(x)
+  }
 
   next = ()=>{
     let left = this.props.left;
@@ -60,7 +63,7 @@ class UserList extends Component {
 
   render() {
     const unWound = this.props.users;
-    console.log(this.props)
+    console.log(this.props);
       if(unWound.length > 0){
           const MU = this.props.mappedUsers;
           const uze = this.props.currentPage;
@@ -96,7 +99,7 @@ class UserList extends Component {
                              <div style={{marginLeft:"2px"}}>{x}</div>
                            </div>
                            <span className={classes.date+' '+classes.all} >Date entered: {new moment(MU[x].date).format("MMM Do YY")}</span>
-                           <Link to='/Chat' onClick={(e)=>{e.preventDefault();this.props.changeCurrentUser(x);this.props.history.push('/Chat')}} className={classes.button+' '+classes.all} >Chat</Link>
+                           <Link to='/Chat' onClick={(e)=>{e.preventDefault();this.changeCurrentUser(x);this.props.history.push('/Chat')}} className={classes.button+' '+classes.all} >Chat</Link>
                         </div>
                         )
                 })}
@@ -146,7 +149,8 @@ const mapDispatchToProps = dispatch => {
         addUsers: () => dispatch({type:"USERS",payload:"something"}),
         changeCurrentUser: (currentUser) => dispatch({type:"CURRENT",payload:currentUser}),
         reconcileState:(payload)=>dispatch({type:"CHANGEPAGEVALUES",payload}),
-        reconcileMappedState:(payload)=>dispatch({type:"CHANGEMAPPEDVALUES",payload})
+        reconcileMappedState:(payload)=>dispatch({type:"CHANGEMAPPEDVALUES",payload}),
+        changeCurrentMappedUser: (currentUser) => dispatch({type:"MAPPEDCURRENT",payload:currentUser}),
     }
 }
 

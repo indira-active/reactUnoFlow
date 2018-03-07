@@ -1,7 +1,7 @@
 
 const initialState = {
     users: {},
-    currentUser:0,
+    currentUser:'68c03f415fce99c4be3f7156',
     currentPage:0,
     left:0,
     right:null,

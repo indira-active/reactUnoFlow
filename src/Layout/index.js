@@ -5,15 +5,16 @@ import Basic from '../Basic'
 import UserList from "../UserList"
 import {connect} from "react-redux"
 import moment from "moment"
+import clone from "clone"
 
 class Layout extends Component {
 	state={
 	     users:null
 	  }	
 	componentDidMount(){
-		this.refresh();
+		this.start(true);
 	}
-    refresh = ()=>{
+    start = (start)=>{
         fetch('https://damp-plateau-11898.herokuapp.com/api/loadusers')
         .then(res => res.json())
         .then(load=>{
@@ -21,7 +22,8 @@ class Layout extends Component {
             const users = load.map(val=>{
                 mappedUsers[val.smoochId] = {
                     userId:val.smoochUserId?val.smoochUserId:`anonymous:${val.smoochId}`,
-                    messages:[],
+                    messages:{},
+                    active:true,
                     notCalled:true,
                     unread:0,
                     date:val.created
@@ -35,11 +37,23 @@ class Layout extends Component {
                     date:val.created
                 }
             })
+            if(start){
             const right = Math.floor(users.length/10)>5?5:Math.floor(users.length/10);
             this.props.reconcileMappedState({users:mappedUsers,right,quotient:right,userAmount:Math.floor(users.length/10)})
             this.props.reconcileState({right,quotient:right,userAmount:Math.floor(users.length/10)})
             this.props.addUsers(users)
+            }else{
+                const quotient = Math.floor(users.length/10)>5?5:Math.floor(users.length/10);
+                const userAmount = Math.floor(users.length/10);
+                const newUsers = clone(mappedUsers);
+                this.props.reconcileMappedState({users:newUsers,quotient,userAmount})
+            }
+           
         }).catch(err=>{console.log('err is happening',err)})
+    }
+    refresh = ()=>{
+        console.log('refreshing baby')
+        this.start();
     }
 	render(){
 		return this.props.users?( <Switch>
