@@ -142,7 +142,6 @@
 .chatParagraph div{
     padding:6px;
     height: 100%;
-    overflow: scroll;
 }
 .CHAT .input {
   background: rgba(30, 228, 148, 0.7);

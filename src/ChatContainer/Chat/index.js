@@ -98,7 +98,7 @@ class Chat extends Component {
     	}
     	arrToReturn.push((<div 
     		key={id+'3'} className={(isAdmin?classes.right:classes.left) + " "+ classes.chatParagraph}>                                
-          <div  onClick={()=>{if(chat.content.length>140&&!chat.readMore) this.setState({stopScroll:!this.state.stopScroll})}} 
+          <div style={{overflowY:chat.content.length>140?"scroll":"none"}}  onClick={()=>{if(chat.content.length>140&&!chat.readMore) this.setState({stopScroll:!this.state.stopScroll})}} 
           onMouseLeave = {()=>this.stopScroll(chat)}
           >{this.readMoreController(chat)}
 	          {this.readMoreButtonController(chat,id)}</div> 
@@ -131,8 +131,8 @@ class Chat extends Component {
                 <div style={{overflowY:this.state.stopScroll?"hidden":'scroll'}} ref={`thing`} className={classes.chats}>
                     {chats?userValues:null}
                 </div>
-                <form ref={(el) => { this.messagesEnd = el; }} className={classes.input} onSubmit={(e) => this.submitMessage(e)}>
-                    <input type="text" value={this.state.text} onChange={this.typeHandler} />
+                <form ref={(el) => { this.messagesEnd = el; }}  className={classes.input} onSubmit={(e) => this.submitMessage(e)}>
+                    <input type="text" value={this.state.text} onFocus={()=>this.props.wipeUnreadMapped(this.props.mUserId)} onChange={this.typeHandler} />
                     <input type="submit" value="Submit" />
                 </form>
             </div>
