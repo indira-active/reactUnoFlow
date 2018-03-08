@@ -3,6 +3,9 @@ import ChatContainer from "../ChatContainer"
 import {Route,Switch,Redirect,withRouter} from "react-router-dom"
 import Basic from '../Basic'
 import UserList from "../UserList"
+import Upload from "../Upload"
+import Create from "../Create"
+
 import {connect} from "react-redux"
 import moment from "moment"
 import clone from "clone"
@@ -60,6 +63,8 @@ class Layout extends Component {
         <Route path="/Chat" render={()=>{return (<ChatContainer refresh={this.refresh} />)}} />
         <Route path="/Users" render={()=>{return (<UserList refresh={this.refresh} />)}} />
         <Route path="/Search" render={()=>{return (<UserList refresh={this.refresh} />)}} />
+        <Route path="/Upload" component={Upload} />
+        <Route path="/Create" component={Create} />
         <Route path="/" exact component={Basic} />
         <Redirect to="/" />
       </Switch>):(<Switch>

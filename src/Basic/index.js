@@ -19,6 +19,16 @@ const basic = (props)=>{
         Chat 
         </h2>
         </Link>
+        <Link to="/Upload">
+        <h2 style={{margin:"50px",fontSize:"40px"}}>
+        Upload
+        </h2>
+        </Link>
+        <Link to="/Create">
+        <h2 style={{margin:"50px",fontSize:"40px"}}>
+        Create
+        </h2>
+        </Link>
     </Hoc>
 		)
 }

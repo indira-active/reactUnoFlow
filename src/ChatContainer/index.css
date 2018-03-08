@@ -5,3 +5,37 @@
   width: 100vw;
   overflow: hidden;
 }
+
+.frame a{
+  font-size: 1.5em;
+  color:black;
+}
+.frame{
+    overflow-y: hidden;
+    display: grid;
+    grid-template-columns: 1fr 10fr;
+    grid-template-rows: repeat(1,minmax(50px,10vh));
+}
+.corner{
+	display: grid;
+    grid-template-rows: repeat(auto-fit,minmax(5px,1fr));
+}
+.container{
+	display:grid;
+	grid-template-rows: auto 90%;
+	height: 100%;
+	overflow: hidden;
+}
+@media (max-width: 900px) {
+    .frame a{
+    font-size: 1em;
+    color:black;
+  }
+}
+@media (max-height: 700px) {
+    .frame a{
+    font-size: .6em;
+    color:black;
+  }
+}
+

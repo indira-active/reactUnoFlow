@@ -34,14 +34,6 @@ class Search extends Component {
 						<input onChange={(event)=>{this.setState({text:event.target.value})}} value={this.state.text} type="text" style={{width:"100%",height:"100%"}} placeholder='e.g john@gmail.com'/>
 						<input onClick={()=>{this.fetchResults(this.state.text)}} type="submit" value='search'/>
 				</form> 
-					<div>{['date','userId'].map((value,index)=>(
-						<button 
-							onClick={()=>{this.setState({filter:value})}}
-							key={index}
-							className={this.state.filter === value?`${classes[value]} ${classes.active}`:classes[value]}>
-							{value}
-						</button>))}
-					</div>
 				<div className={classes.parent}>
 					{this.state.searchResults !== null?(this.state.searchResults.map((val,index)=>{
 						const result = (
@@ -49,7 +41,7 @@ class Search extends Component {
 							<p style={{display:"inline-block"}}>{val.smoochUserId}</p>
 							<Link to='/Chat' onClick={(event)=>{
 								event.preventDefault();
-								this.props.changeCurrentUser(val.smoochId);
+								this.props.changeCurrentMappedUser(val.smoochId);
 								this.props.history.push('/Chat')}}>chat</Link>
 						</div>)
 						return result
@@ -71,7 +63,7 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch => {
     return {
         addUsers: () => dispatch({type:"USERS",payload:"something"}),
-        changeCurrentUser: (currentUser) => dispatch({type:"CURRENT",payload:currentUser}),
+        changeCurrentMappedUser: (currentUser) => dispatch({type:"MAPPEDCURRENT",payload:currentUser}),
     }
 }
 

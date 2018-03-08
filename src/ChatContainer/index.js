@@ -198,39 +198,44 @@ addToMessagesRubricMapped = (MU,message) => {
         const mUser = this.props.mappedUsers.users[mUserId];
         const mUsers = this.props.mappedUsers.users
         return !Object.keys(this.props.mappedUsers.users).length>0?(<Spinner/>):(
-            <div style={{position:"fixed"}}>
-                <div style={{ height: "10vh",overflow:"hidden",display:"grid",gridTemplateColumns:"1fr 10fr",gridTemplateRows:"1fr" }}>
-                <div >
-                    <Link to="/Users">
-                        Users
-                    </Link>
-                    <br/>
-                    <Link to="/Chat">
-                      Chat
-                    </Link>
-                </div>
-                    <div style={{maxHeight:"100%",overflow:"scroll"}}>
+            <div className={classes.container}>
+                <div className={classes.frame} >
+                    <div className={classes.corner} >
+                                <Link to="/Users">
+                                Users
+                                </Link>
+                                <Link to="/Chat">
+                                Chat 
+                                </Link>
+                                <Link to="/Upload">
+                                Upload
+                                </Link>
+                                <Link to="/Create">
+                                Create
+                                </Link>
+                        </div>
+                    <div style={{overflowY:"scroll",boxSizing:"border-box"}}>
                     {USER?Object.keys(this.props.mappedUsers.users).map(
                         (user, index) => {
                             return (
-                                <div key={user+Date.now()+Math.random()} style={{ display: 'inline-block', margin: "3px",position:'relative'}}>
-                                    <Button
+                                <div key={user+Date.now()+Math.random()} style={{ display: 'inline-block', margin: "3px"}}>
+                                    <Button style={{boxSizing:"border-box"}}
                                         onClick={() => { 
                                             this.updateCurrentMappedUser(user)
                                             return mUsers[user].notCalled?this.callUsersMapped(user,mUsers[user].userId,null,true):this.props.reconcileState({currentUser:index})}}
                                         bsStyle='primary'
                                         bsSize="small">{mUsers[user].userId?mUsers[user].userId:`NR ${user}`}</Button>
-                                    <Button
+                                    <Button 
                                         onClick={() => {this.callUsersMapped(user,mUsers[user].userId)}}
                                         bsStyle="success"
                                         bsSize="small">
                                         update</Button>
-                                    <Button
+                                    <Button 
                                         onClick={() => {this.postDone(user)}}
                                         bsStyle="danger"
                                         bsSize="small">
                                         close</Button>
-                                    <span style={{position:"absolute",top:"-5px",left:"0px",backgroundColor:"black",color:"white",fontSize:"12px"}}>
+                                    <span >
                                     {mUsers[user].unread || null}
                                     </span>
                                 </div>

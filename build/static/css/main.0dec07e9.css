@@ -149,7 +149,6 @@
 .index__chatParagraph__Kc98t div{
     padding:6px;
     height: 100%;
-    overflow: scroll;
 }
 .index__CHAT__2Uxgs .index__input__3Rcqc {
   background: rgba(30, 228, 148, 0.7);
@@ -214,14 +213,7 @@
   font-size: 1em;
 
 }
-}
-.index__App__3-rYk {
-  background-color: #1EE494;
-  height: 90vh;
-  width: 100vw;
-  overflow: hidden;
-}
-.index__Loader__3U31l,
+}.index__Loader__3U31l,
 .index__Loader__3U31l:before,
 .index__Loader__3U31l:after {
   border-radius: 50%;
@@ -291,6 +283,13 @@
     transform: rotate(360deg);
   }
 }
+.index__App__3-rYk {
+  background-color: #1EE494;
+  height: 90vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
     .index__App-title__3kC0s {
       font-size: 1.5em;
     }
@@ -402,6 +401,8 @@
     .index__item__3uNLK{
       display: grid;
       height: 100%;
+      -webkit-box-shadow: 2px 2px 1px black;
+              box-shadow: 2px 2px 1px black;
       padding: 1%;
       font-family: sans-serif;
       font-weight: 900;
@@ -502,6 +503,11 @@
     }
     .index__pagination__3gTrq{
      grid-template-columns: repeat(8,1fr); 
+    }
+  }
+  @media (max-width: 493px){
+    .index__item__3uNLK div>div,a, span{
+      text-align: center !important;
     }
   }.index__Header__3ywXt{
 	display: grid;
@@ -645,6 +651,21 @@ color:white;
 	-webkit-box-shadow:1px 1px 0px aquamarine;
 	        box-shadow:1px 1px 0px aquamarine
 }
+.index__date__NSSHt{
+	display: inline-block;
+	padding: 10px;
+	margin: 7px;
+	outline:none !important;
+}
+.index__userId__3buml{
+	display: inline-block;
+	padding: 10px;
+	margin:7px;
+	outline:none !important;
+}
+.index__active__Yvl5g{
+	background-color: #32cd32;
+}
 @media (max-width: 600px){
 	.index__totalGrid__1ZTtv{
 	grid-template-columns: 70% auto;
@@ -676,5 +697,16 @@ color:white;
 	width: 100%;
 	overflow: hidden
 }
+}.index__block__2ucwr{
+	display: block;
+	background-color: aquamarine;
+	padding-bottom:20px;
+	padding-right:20px;
+	margin-right:40px;
+	margin-bottom:40px;
+	border-color: black;
+	font-size: 20px;
+	border-style: solid;
+	border-width: 5px;
 }
-/*# sourceMappingURL=main.4c4606b7.css.map*/
+/*# sourceMappingURL=main.0dec07e9.css.map*/
