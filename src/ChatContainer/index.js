@@ -30,7 +30,7 @@ class ChatContainer extends Component {
             const msg = JSON.parse(message)
             if(msg.trigger === 'merge:appUser'){
                 console.log(msg)
-                this.postDone(msg.discarded[0]._id,msg.surviving._id,msg.surviving.userId);
+                this.postDoneMapped(msg.discarded[0]._id,msg.surviving._id,msg.surviving.userId);
                 alert(`${msg.discarded[0]._id} is merging with ${msg.surviving.userId} aka ${msg.surviving._id}`)
             }
             if (msg.trigger === 'message:appUser') {
@@ -44,29 +44,7 @@ class ChatContainer extends Component {
             }
         });
     }
-    postDone = (smoochId,userValue,username)=>{
-        this.postDoneMapped(smoochId,userValue,username);
-  /*      fetch(`https://damp-plateau-11898.herokuapp.com/api/updateuser`, {
-            method: 'POST',
-            body: JSON.stringify({smoochId}), 
-            headers: new Headers({
-              'Content-Type': 'application/json'
-            })
-          }).then(res => res.json())
-          .catch(error => console.error('Error:', error))
-          .then(response => {
-                
-          });*/
-        const ID = this.props.mappedUsers.users[smoochId].firebaseId
-        console.log(ID);
-        const ref = this.props.db.collection('users').doc(ID);
-        const setWithMerge = ref.set({
-            active: false
-        }, { merge: true });
-
-    }
     postDoneMapped = (smoochId,userValue,username)=>{
-
         const newUsers = clone(this.props.mappedUsers.users);
         let currentUser = this.props.mappedUsers.currentUser;
         delete newUsers[smoochId]
@@ -77,53 +55,32 @@ class ChatContainer extends Component {
         if(userValue&&username){
             this.deactivateUser(true,smoochId,userValue,username)
             this.postOpen(userValue)
+        }else{
+            this.deactivateUser(true,smoochId)
         }
     }
     deactivateUser = (callUsers,smoochId,userValue,username)=>{
-/*        fetch(`https://damp-plateau-11898.herokuapp.com/api/updateuser`, {
-            method: 'POST',
-            body: JSON.stringify({smoochId}), 
-            headers: new Headers({
-              'Content-Type': 'application/json'
-            })
-          }).then(res => res.json())
-          .catch(error => console.error('Error:', error))
-          .then(response => {
-                if(callUsers){
+        this.changeActiveStatus(false,smoochId,callUsers,userValue,username)
+    }
+    //this function needs to be reevaluated for merged users use case
+    changeActiveStatus = (active,smoochId,callUsers,userValue,username)=>{
+        const ID = this.props.mappedUsers.users[smoochId].firebaseId
+        console.log(ID);
+        const ref = this.props.db.collection('users').doc(ID);
+        ref.set({
+            active: active?true:false
+        }, { merge: true });
+        if(callUsers){
+            setTimeout(() => {
                   this.callUsersMapped(userValue,username)
-                }
-          });*/
-        const ID = this.props.mappedUsers.users[smoochId].firebaseId
-        console.log(ID);
-        const ref = this.props.db.collection('users').doc(ID);
-        const setWithMerge = ref.set({
-            active: false
-        }, { merge: true });
-
+            }, 100)
+        }
     }
 
-    postOpen = (smoochId,update)=>{
-/*        fetch(`https://damp-plateau-11898.herokuapp.com/api/updateusertoactive`, {
-            method: 'POST',
-            body: JSON.stringify({smoochId}), 
-            headers: new Headers({
-              'Content-Type': 'application/json'
-            })
-          }).then(res => res.json())
-          .catch(error => console.error('Error:', error))
-          .then(response => {
-                if(update){
-                    this.props.refresh();
-                }
-          });*/
-        const ID = this.props.mappedUsers.users[smoochId].firebaseId
-        console.log(ID);
-        const ref = this.props.db.collection('users').doc(ID);
-        const setWithMerge = ref.set({
-            active: true
-        }, { merge: true });
+    postOpen = (smoochId)=>{
+        this.changeActiveStatus(true,smoochId)
     }
-        callUsersMapped = (user,username,index,change)=>{
+        callUsersMapped = (user,username,change)=>{
             fetch('https://damp-plateau-11898.herokuapp.com/api/getmessages?appUser='+user)
             .then(res => res.json())
             .then(load=>{
@@ -166,48 +123,47 @@ class ChatContainer extends Component {
     updateCurrentMappedUser = (id)=>{
         this.props.changeCurrentMappedUser(id)
     }
-addToMessagesRubricMapped = (MU,message) => {
-        const users = clone(MU.users)
-        if(message.username === "admin" && message.onClient){
-            //have to substitute this for genuine ID at some point
-            users[message._id].messages[Date.now()+""+Math.random()] = {
-                content: message.content,
-                username: message.username,
-                readMore:message.content.length>140?true:false
-            }
-            socket.emit("message", {
-                    msg: message.content,
-                    id: message._id
-                })
-        }else if(users[message._id] === undefined){
-                 users[message._id] = {
-                    userId: message.username,
-                    _id: message._id,
-                    unread:1,
-                    messages: {
-                        [message.id]:{
-                        content: message.content,
-                        username: message.username,
-                        readMore:message.content.length>140?true:false
+    addToMessagesRubricMapped = (MU,message) => {
+            const users = clone(MU.users)
+            if(message.username === "admin" && message.onClient){
+                //have to substitute this for genuine ID at some point
+                users[message._id].messages[Date.now()+""+Math.random()] = {
+                    content: message.content,
+                    username: message.username,
+                    readMore:message.content.length>140?true:false
+                }
+                socket.emit("message", {
+                        msg: message.content,
+                        id: message._id
+                    })
+            }else if(users[message._id] === undefined){
+                     users[message._id] = {
+                        userId: message.username,
+                        _id: message._id,
+                        unread:1,
+                        messages: {
+                            [message.id]:{
+                            content: message.content,
+                            username: message.username,
+                            readMore:message.content.length>140?true:false
+                            }
                         }
-                    }
+                }
+            }else{
+                users[message._id] = {
+                    ...users[message._id],
+                    unread:users[message._id].unread+1
+                }
+                users[message._id].messages[message.id] = {
+                    content: message.content,
+                    username: message.username,
+                    readMore:message.content.length>140?true:false
+                }
             }
-        }else{
-            users[message._id] = {
-                ...users[message._id],
-                unread:users[message._id].unread+1
-            }
-            users[message._id].messages[message.id] = {
-                content: message.content,
-                username: message.username,
-                readMore:message.content.length>140?true:false
-            }
-        }
-        return {users}
+            return {users}
 
-    }
+        }
     addToMessages = (message) => {
-      //  this.props.reconcileState(this.addToMessagesRubric(this.props,message))
         this.props.reconcileMappedState(this.addToMessagesRubricMapped(this.props.mappedUsers,message))
     }
     render() {
@@ -249,7 +205,7 @@ addToMessagesRubricMapped = (MU,message) => {
                                         bsSize="small">
                                         update</Button>
                                     <Button 
-                                        onClick={() => {this.postDone(user)}}
+                                        onClick={() => {this.postDoneMapped(user)}}
                                         bsStyle="danger"
                                         bsSize="small">
                                         close</Button>
@@ -266,11 +222,12 @@ addToMessagesRubricMapped = (MU,message) => {
                     wipeUnreadMapped={this.wipeUnreadMapped}
                      newMessage={this.addToMessages}
                      changeReadMore={this.changeReadMore}
+                     callUsersMapped={this.callUsersMapped}
                      changeReadMoreMapped = {this.changeReadMoreMapped}
-                      currentIndex={this.props.currentUser}
-                       currentUser={USER} messages={USER.messages}
-                       mUserId={mUserId}
-                       mUserIdMessages={mUser.messages} />
+                     currentIndex={this.props.currentUser}
+                     currentUser={USER} messages={USER.messages}
+                     mUserId={mUserId}
+                     mUserIdMessages={mUser.messages} />
                 </div>):null}
             </div>
         )

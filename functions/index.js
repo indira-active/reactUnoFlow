@@ -18,13 +18,44 @@ const Vision = require('@google-cloud/vision');
 const vision = new Vision();
 const spawn = require('child-process-promise').spawn;
 const path = require('path');
-const os = require('os');
-const fs = require('fs');
 
+const os = require('os');
+const cors = require('cors')
+const fs = require('fs');
+const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser');
+const SmoochCore = require('smooch-core');
+ const smooch = new SmoochCore({
+      keyId: 'app_5a93ae6b5ed8ba0022389197',
+      secret: 'LtbsS1fo7ORUesnHUTvsJYZ7',
+      scope: 'app', // account or app
+  });
 const functions = require('firebase-functions');
-// Import and initialize the Firebase Admin SDK.
+const express = require('express');
 const admin = require('firebase-admin');
 admin.initializeApp(functions.config().firebase);
+
+const app = express();
+
+app.use(cors({origin:true}));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({
+      extended: false
+  }));
+app.use(cookieParser());
+
+app.get('/getMessages', (req, res) => {
+  smooch.appUsers.getMessages(req.query.appUser, req.query.time ? {
+            after: req.query.time
+        } : undefined).then((response) => {
+            res.json(response)
+        }).catch(err => {
+            console.error('looks like there was an error see it below');
+            console.error(err)
+        })
+});
+
+exports.smoochCalls = functions.https.onRequest(app);
 
 exports.addWelcomeMessages = functions.auth.user().onCreate(event => {
   const user = event.data;

@@ -123,7 +123,8 @@ class Chat extends Component {
         }
         return (
             <div className={classes.CHAT}>
-                <h3>Indira({this.props.currentUser.userId})</h3>
+                <h3 
+                onClick={()=>this.props.callUsersMapped(this.props.mUserId,this.props.currentUser.userId)}>{this.props.currentUser.userId}</h3>
                 <div style={{overflowY:this.state.stopScroll?"hidden":'scroll'}} ref={`thing`} className={classes.chats}>
                     {chats?userValues:null}
                 </div>
