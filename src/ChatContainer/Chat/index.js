@@ -105,7 +105,6 @@ class Chat extends Component {
     }
 
     render() {
-        console.log(this.props)
         if(this.props.mUserIdMessages){
         const chats = Object.keys(this.props.mUserIdMessages);
         const chatContent = this.props.mUserIdMessages;

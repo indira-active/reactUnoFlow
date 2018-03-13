@@ -65,7 +65,6 @@ class ChatContainer extends Component {
     //this function needs to be reevaluated for merged users use case
     changeActiveStatus = (active,smoochId,callUsers,userValue,username)=>{
         const ID = this.props.mappedUsers.users[smoochId].firebaseId
-        console.log(ID);
         const ref = this.props.db.collection('users').doc(ID);
         ref.set({
             active: active?true:false
@@ -80,25 +79,17 @@ class ChatContainer extends Component {
     postOpen = (smoochId)=>{
         this.changeActiveStatus(true,smoochId)
     }
-        callUsersMapped = (user,username,change)=>{
-            fetch('https://damp-plateau-11898.herokuapp.com/api/getmessages?appUser='+user)
-            .then(res => res.json())
-            .then(load=>{
+        callUsersMapped =  async (user,username,change)=>{
+
                 const mappedUsers = clone({...this.props.mappedUsers.users});
                 const newMappedUser = mappedUsers[user];
-                load.messages.forEach(msg=>{
-                    const content = msg.text.trim() || msg.actions.map((val)=>{
-                            return val.text
-                        }).join(' ');
-                    newMappedUser.messages[msg._id] = {
-                            content:content,
-                            username:msg.role === "appMaker"?"admin":username|| `anonymous : ${username||msg._id}`,
-                            authorId:msg.authorId,
-                            readMore:content.length>140?true:false
-                        }
-                })
+                if(newMappedUser.notCalled){
+                    newMappedUser.messages = await newMappedUser.messages();
+                    newMappedUser.notCalled = false;
+                }else{
+                    newMappedUser.messages = await newMappedUser.messageFunction();
+                }
                 this.props.reconcileMappedState({users:mappedUsers,currentUser:change?user:this.props.mappedUsers.currentUser})
-            }).catch(err=>{console.log('err is happening',err)})
     }
 
     wipeUnreadMapped = (id)=>{
@@ -254,3 +245,30 @@ const mapDispatchToProps = dispatch => {
 }
 
 export default withRouter(connect(mapStateToProps, mapDispatchToProps)(ChatContainer))
+                /*load.messages.forEach(msg=>{
+                    this.props.db.collection('users').doc(user).collection('messages').doc(msg._id).set(msg);
+                    const content = msg.text.trim() || msg.actions.map((val)=>{
+                            return val.text
+                        }).join(' ');
+                    newMappedUser.messages[msg._id] = {
+                            content:content,
+                            username:msg.role === "appMaker"?"admin":username|| `anonymous : ${username||msg._id}`,
+                            authorId:msg.authorId,
+                            readMore:content.length>140?true:false
+                        }
+                })*/
+
+
+
+
+        /*fetch('https://us-central1-unoflow-8ec7e.cloudfunctions.net/smooch/getMessages?appUser='+user)
+            .then(res => res.json())
+            .then(async load=>{
+                const mappedUsers = clone({...this.props.mappedUsers.users});
+                const newMappedUser = mappedUsers[user];
+                if(newMappedUser.notCalled){
+                    newMappedUser.messages = await newMappedUser.messages();
+                    newMappedUser.notCalled = false;
+                }
+                this.props.reconcileMappedState({users:mappedUsers,currentUser:change?user:this.props.mappedUsers.currentUser})
+            }).catch(err=>{console.log('err is happening',err)})*/
