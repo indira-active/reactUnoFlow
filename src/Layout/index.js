@@ -5,64 +5,83 @@ import Basic from '../Basic'
 import UserList from "../UserList"
 import Upload from "../Upload"
 import Create from "../Create"
+import Center from "../CenterChat"
+
 
 import {connect} from "react-redux"
-import moment from "moment"
 import clone from "clone"
+import * as firebase from "firebase";
+import 'firebase/firestore'
+
+
+
 
 class Layout extends Component {
 	state={
 	     users:null
 	  }	
-	componentDidMount(){
-		this.start(true);
+	componentDidMount = async ()=>{
+        const  config = {
+        apiKey: "AIzaSyCTIb6X9HY1NCOngIP2T1IGFvdN71ZCY4E",
+        authDomain: "unoflow-8ec7e.firebaseapp.com",
+        databaseURL: "https://unoflow-8ec7e.firebaseio.com",
+        projectId: "unoflow-8ec7e",
+        storageBucket: "unoflow-8ec7e.appspot.com",
+        messagingSenderId: "245726400419"
+        };
+        firebase.initializeApp(config);
+          const auth = firebase.auth();
+          const database = firebase.database();
+          const storage = firebase.storage();
+          const db = firebase.firestore();
+          const messaging = firebase.messaging();
+          this.props.reconcileFirebase({auth,database,storage,firebase,db,messaging});
+		this.start(db)
 	}
-    start = (start)=>{
-        fetch('https://damp-plateau-11898.herokuapp.com/api/loadusers')
-        .then(res => res.json())
-        .then(load=>{
-            const mappedUsers = {}
-            const users = load.map(val=>{
-                mappedUsers[val.smoochId] = {
-                    userId:val.smoochUserId?val.smoochUserId:`anonymous:${val.smoochId}`,
-                    messages:{},
-                    active:true,
-                    notCalled:true,
-                    unread:0,
-                    date:val.created
-                }
-                return{
-                    userId:val.smoochUserId?val.smoochUserId:`anonymous:${val.smoochId}`,
-                    _id:val.smoochId,
-                    messages:[],
-                    notCalled:true,
-                    unread:0,
-                    date:val.created
-                }
-            })
-            if(start){
-            const right = Math.floor(users.length/10)>5?5:Math.floor(users.length/10);
-            this.props.reconcileMappedState({users:mappedUsers,right,quotient:right,userAmount:Math.floor(users.length/10)})
-            this.props.reconcileState({right,quotient:right,userAmount:Math.floor(users.length/10)})
-            this.props.addUsers(users)
-            }else{
-                const quotient = Math.floor(users.length/10)>5?5:Math.floor(users.length/10);
-                const userAmount = Math.floor(users.length/10);
-                const newUsers = clone(mappedUsers);
-                this.props.reconcileMappedState({users:newUsers,quotient,userAmount})
-            }
-           
-        }).catch(err=>{console.log('err is happening',err)})
-    }
+    start = (db)=>{
+            const mappedUsers = {};
+
+                db.collection("users").where("active", "==", true).orderBy('created','desc')
+                    .get()
+                    .then((querySnapshot)=>{
+                        querySnapshot.forEach((doc)=>{
+                            const values = doc.data();
+                            const smoochId = values.smoochId;
+                                mappedUsers[smoochId] = {
+                                userId:values.smoochUserId?values.smoochUserId:`anonymous:${smoochId}`,
+                                firebaseId:doc.id,
+                                messages:{},
+                                active:true,
+                                notCalled:true,
+                                unread:0,
+                                date:values.created
+                            }
+                        });
+                                if(db){
+                            const right = Math.floor(Object.keys(mappedUsers).length/10)>5?5:Math.floor(Object.keys(mappedUsers).length/10);
+                            this.props.reconcileMappedState({users:mappedUsers,right,quotient:right,userAmount:Math.floor(Object.keys(mappedUsers).length/10)})
+                            }else{
+                                const quotient = Math.floor(Object.keys(mappedUsers).length/10)>5?5:Math.floor(Object.keys(mappedUsers).length/10);
+                                const userAmount = Math.floor(Object.keys(mappedUsers).length/10);
+                                const newUsers = clone(mappedUsers);
+                                this.props.reconcileMappedState({users:newUsers,quotient,userAmount})
+                            }
+                    })
+                    .catch(function(error) {
+                        console.log("Error getting documents: ", error);
+                    });
+
+}
     refresh = ()=>{
         console.log('refreshing baby')
-        this.start();
+        this.start(this.props.firebase.db);
     }
 	render(){
-		return this.props.users?( <Switch>
+		return this.props.mappedUsers?( <Switch>
         <Route path="/Chat" render={()=>{return (<ChatContainer refresh={this.refresh} />)}} />
         <Route path="/Users" render={()=>{return (<UserList refresh={this.refresh} />)}} />
         <Route path="/Search" render={()=>{return (<UserList refresh={this.refresh} />)}} />
+        <Route path="/Center" component={Center} />
         <Route path="/Upload" component={Upload} />
         <Route path="/Create" component={Create} />
         <Route path="/" exact component={Basic} />
@@ -77,18 +96,14 @@ class Layout extends Component {
 	
 const mapStateToProps = state => {
     return {
-        users: state.users.users,
-        currentPage:state.users.currentPage,
-        left:state.users.left,
-        right:state.users.right,
-        mappedUsers:state.mappedUsers.users
+        mappedUsers:state.mappedUsers.users,
+        firebase:state.fb
     };
 }
 
 const mapDispatchToProps = dispatch => {
     return {
-        addUsers: (payload) => dispatch({type:"USERS",payload}),
-        reconcileState:(payload)=>dispatch({type:"CHANGEPAGEVALUES",payload}),
+        reconcileFirebase:(payload)=>dispatch({type:"FIRERECONCILE",payload}),
         reconcileMappedState:(payload)=>dispatch({type:"CHANGEMAPPEDVALUES",payload})
     }
 }

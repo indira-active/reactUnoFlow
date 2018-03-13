@@ -1,8 +1,6 @@
 import React, { Component } from 'react';
 import classes from './index.css';
-import Hoc from "./../../hoc"
 import ReactDOM from 'react-dom';
-import CircularJSON from "circular-json"
 import Spinner from "../../components/Spinner";
 //need to add an ability to wipe unread messages
 
@@ -109,10 +107,8 @@ class Chat extends Component {
     render() {
         console.log(this.props)
         if(this.props.mUserIdMessages){
-        const username = "admin";
         const chats = Object.keys(this.props.mUserIdMessages);
         const chatContent = this.props.mUserIdMessages;
-        const userId = this.props.mUserId;
         const userValues = []
         if(chats.length>0){
             chats.forEach((chatId,index,arr) => {

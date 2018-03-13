@@ -29,9 +29,8 @@ class UserList extends Component {
     let right = this.props.right;
     const quotient = this.props.quotient;
     let currentPage = this.props.currentPage;
-    const length = this.props.users.length;
     const userAmount = this.props.userAmount;
-    if(currentPage==right && right-left>=quotient && right<(userAmount-1)){
+    if(currentPage===right && right-left>=quotient && right<(userAmount-1)){
       currentPage = currentPage + 1;
       right = right +1;
       left = right - quotient;
@@ -47,9 +46,7 @@ class UserList extends Component {
     let right = this.props.right;
     const quotient = this.props.quotient;
     let currentPage = this.props.currentPage;
-    const length = this.props.users.length;
-    const userAmount = this.props.userAmount;
-    if(currentPage==left && left>0 && quotient>4){
+    if(currentPage===left && left>0 && quotient>4){
       currentPage = currentPage - 1;
       right = right -1;
       left = right - quotient;
@@ -87,14 +84,14 @@ class UserList extends Component {
             <Hoc>
             <Search show={this.state.show} modalClosed={this.changeShow}/>
               <div className={classes.container}>
-                  <header className={classes['container-header']}>
+                  <div style={{paddingBottom:"0px !important"}} className={classes['container-header']}>
                       <Header changeShow={this.changeShow} tabs={this.props.tabs}/>
-                  </header>
+                  </div>
                 <div className={classes['item-container']}>
                   {unWound.slice(this.props.currentPage*10,(this.props.currentPage*10)+10).map((x,y)=>{
                    return(
                         <div className={classes.item} key={x}>
-                           <div className={classes.userid+' '+' '+classes.all}>
+                           <div className={classes.userid+' '+classes.all}>
                              <div>{MU[x].userId} </div>
                              <div style={{marginLeft:"2px"}}>{x}</div>
                            </div>

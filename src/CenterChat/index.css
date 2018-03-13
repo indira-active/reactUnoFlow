@@ -1,0 +1,89 @@
+.messageForm{
+    	width: none !important;
+    margin:0px !important;
+    padding:0px !important;
+}
+.App{
+	padding: 20px;
+}
+.messageForm div button{
+    margin:0px !important;
+    padding:0px !important;
+}
+.input{
+	border: none;
+    border-bottom: 1px solid rgba(0,0,0,.12);
+    display: block;
+    font-size: 16px;
+    font-family: "Helvetica","Arial",sans-serif;
+    margin-top: 20px;
+    width: 70%;
+    background: 0 0;
+    text-align: left;
+    color: inherit;
+}
+.mdc{
+	   display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+.damsel{
+	grid-template-columns: 3fr 1fr 1fr;
+	height: 100%;
+	padding: 0PX;
+	padding-left: 10px;
+	grid-gap: 15px;
+	width: 100%;
+	grid-template-rows: auto 100px;
+    grid-template-areas: "messages messages messages"
+    					 "message send photo";
+   	padding-right: 10px;
+    grid-gap: 15px;
+    display: grid;
+}
+.singleMessage{
+	grid-area: message;
+}
+.singleMessage input {
+	padding: 0px;
+	border-bottom: black;
+	border-bottom-style: solid;
+	border-bottom-width: 1px;
+	outline: none !important;
+}
+.send{
+	grid-area: send;
+	height:auto;
+	overflow: none;
+	height:50%;
+}
+.send span{
+	padding: 0px;
+	position: static;
+	display: none;
+}
+.photo{
+	grid-area: photo;
+	margin: 20px 0;
+}
+.photo button{
+	height:50%;
+	width: 100%;
+}
+.photo button span span{
+	display: none;
+}
+.messages{
+	height:100%;
+	grid-area: messages;
+}
+@media (max-width: 1000px) {
+		.damselWrapper{
+		width: 80% !important;
+	}
+}
+
+@media (max-width: 1000px) {
+		.damselWrapper{
+		width: 100% !important;
+	}
+}

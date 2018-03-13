@@ -29,6 +29,11 @@ const basic = (props)=>{
         Create
         </h2>
         </Link>
+        <Link to="/Center">
+        <h2 style={{margin:"50px",fontSize:"40px"}}>
+        Center
+        </h2>
+        </Link>
     </Hoc>
 		)
 }

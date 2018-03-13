@@ -3,14 +3,22 @@
     "public": "build",
     "ignore": [
       "firebase.json",
+      "database-rules.json",
+      "storage.rules",
+      "firestore.indexes.json",
+      "functions",
       "**/.*",
       "**/node_modules/**"
-    ],
-    "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
     ]
+  },
+  "database": {
+    "rules": "database.rules.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
   }
 }

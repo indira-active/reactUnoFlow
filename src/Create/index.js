@@ -15,7 +15,7 @@ class Create extends Component {
 		})})
 	}
 	postNewUser = ()=>{
-		fetch(`http://localhost:8080/api/newUser?${this.state.properties.map(val=>{return `${val.name}=${val.content}`}).join('')}`, {
+		fetch(`https://damp-plateau-11898.herokuapp.com/api/newUser?${this.state.properties.map(val=>{return `${val.name}=${val.content}`}).join('')}`, {
             method: 'POST',
             body: JSON.stringify({userId:this.state.text}), 
             headers: new Headers({

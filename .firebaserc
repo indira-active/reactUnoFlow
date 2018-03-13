@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "unoflow-20f43"
+    "default": "unoflow-8ec7e",
+    "production": "unoflow-8ec7e"
   }
 }

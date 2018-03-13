@@ -21,7 +21,7 @@ class Upload extends Component {
 	render(){
 		return(
 			<div style={{border:"black 5px",padding:"50px",margin:"100px",fontSize:"25px",textAlign:"center",borderStyle:"solid"}}>
-			<form target='#blank' action="http://localhost:8080/api/addToSmooch" method="POST" encType="multipart/form-data">
+			<form target='#blank' action="https://damp-plateau-11898.herokuapp.com/api/addToSmooch" method="POST" encType="multipart/form-data">
 				<label htmlFor="photo">
 					<input ref={`thing`} onChange={()=>{this.readURL(this.refs.thing)}} style={{padding:"10px"}} type="file" name="photo" accept="image/gif, image/png, image/jpeg" />
 					
@@ -30,7 +30,7 @@ class Upload extends Component {
 							<input type="submit" name="submit" />
 				</label>
 			</form>
-			{this.state.uploaded?<img style={{maxWidth:"400px"}} src={this.state.src} alt="photo"/>:null}
+			{this.state.uploaded?<img style={{maxWidth:"400px"}} src={this.state.src} alt="csupload"/>:null}
 			</div>
 		
 			)

@@ -24,6 +24,7 @@
 	display:grid;
 	grid-template-rows: auto 90%;
 	height: 100%;
+  position: fixed;
 	overflow: hidden;
 }
 @media (max-width: 900px) {

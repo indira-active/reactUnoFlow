@@ -6,6 +6,8 @@ import {BrowserRouter} from "react-router-dom"
 import { Provider } from 'react-redux';
 import users from "./reducers/users"
 import mappedUsers from "./reducers/mappedUsers"
+import fb from "./reducers/firebaseState"
+
 
 import thunk from 'redux-thunk';
 import './index.css';
@@ -15,7 +17,8 @@ const composeEnhancers = compose;
 
 const rootReducer = combineReducers({
     users,
-    mappedUsers
+    mappedUsers,
+    fb
 });
 const store = createStore(rootReducer,composeEnhancers(
     applyMiddleware(thunk)

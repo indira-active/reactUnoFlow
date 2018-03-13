@@ -1,12 +1,11 @@
 import React, { Component } from "react";
 import Chat from "./Chat"
-import Hoc from "./../hoc.js"
 import { Button} from "react-bootstrap"
 import classes from './index.css';
 import io from 'socket.io-client'
 import { connect } from 'react-redux';
 import Spinner from "../components/Spinner";
-import {Route,Switch,Redirect,withRouter,Link} from "react-router-dom"
+import {withRouter,Link} from "react-router-dom"
 
 
 import clone from 'clone'
@@ -46,8 +45,8 @@ class ChatContainer extends Component {
         });
     }
     postDone = (smoochId,userValue,username)=>{
-        this.postDoneMapped(smoochId,userValue,username)
-        fetch(`https://damp-plateau-11898.herokuapp.com/api/updateuser`, {
+        this.postDoneMapped(smoochId,userValue,username);
+  /*      fetch(`https://damp-plateau-11898.herokuapp.com/api/updateuser`, {
             method: 'POST',
             body: JSON.stringify({smoochId}), 
             headers: new Headers({
@@ -57,7 +56,14 @@ class ChatContainer extends Component {
           .catch(error => console.error('Error:', error))
           .then(response => {
                 
-          });
+          });*/
+        const ID = this.props.mappedUsers.users[smoochId].firebaseId
+        console.log(ID);
+        const ref = this.props.db.collection('users').doc(ID);
+        const setWithMerge = ref.set({
+            active: false
+        }, { merge: true });
+
     }
     postDoneMapped = (smoochId,userValue,username)=>{
 
@@ -74,7 +80,7 @@ class ChatContainer extends Component {
         }
     }
     deactivateUser = (callUsers,smoochId,userValue,username)=>{
-        fetch(`https://damp-plateau-11898.herokuapp.com/api/updateuser`, {
+/*        fetch(`https://damp-plateau-11898.herokuapp.com/api/updateuser`, {
             method: 'POST',
             body: JSON.stringify({smoochId}), 
             headers: new Headers({
@@ -86,11 +92,18 @@ class ChatContainer extends Component {
                 if(callUsers){
                   this.callUsersMapped(userValue,username)
                 }
-          });
+          });*/
+        const ID = this.props.mappedUsers.users[smoochId].firebaseId
+        console.log(ID);
+        const ref = this.props.db.collection('users').doc(ID);
+        const setWithMerge = ref.set({
+            active: false
+        }, { merge: true });
+
     }
 
     postOpen = (smoochId,update)=>{
-        fetch(`https://damp-plateau-11898.herokuapp.com/api/updateusertoactive`, {
+/*        fetch(`https://damp-plateau-11898.herokuapp.com/api/updateusertoactive`, {
             method: 'POST',
             body: JSON.stringify({smoochId}), 
             headers: new Headers({
@@ -102,7 +115,13 @@ class ChatContainer extends Component {
                 if(update){
                     this.props.refresh();
                 }
-          });
+          });*/
+        const ID = this.props.mappedUsers.users[smoochId].firebaseId
+        console.log(ID);
+        const ref = this.props.db.collection('users').doc(ID);
+        const setWithMerge = ref.set({
+            active: true
+        }, { merge: true });
     }
         callUsersMapped = (user,username,index,change)=>{
             fetch('https://damp-plateau-11898.herokuapp.com/api/getmessages?appUser='+user)
@@ -110,7 +129,7 @@ class ChatContainer extends Component {
             .then(load=>{
                 const mappedUsers = clone({...this.props.mappedUsers.users});
                 const newMappedUser = mappedUsers[user];
-                const messages = load.messages.forEach(msg=>{
+                load.messages.forEach(msg=>{
                     const content = msg.text.trim() || msg.actions.map((val)=>{
                             return val.text
                         }).join(' ');
@@ -148,7 +167,6 @@ class ChatContainer extends Component {
         this.props.changeCurrentMappedUser(id)
     }
 addToMessagesRubricMapped = (MU,message) => {
-        let change = false;
         const users = clone(MU.users)
         if(message.username === "admin" && message.onClient){
             //have to substitute this for genuine ID at some point
@@ -262,7 +280,8 @@ addToMessagesRubricMapped = (MU,message) => {
 
 const mapStateToProps = state => {
     return {
-        mappedUsers:state.mappedUsers
+        mappedUsers:state.mappedUsers,
+        db:state.fb.db
     };
 }
 
