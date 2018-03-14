@@ -7,7 +7,6 @@ importScripts('https://unoflow-8ec7e.firebaseapp.com/__/firebase/init.js');
 
 const messaging = firebase.messaging();
 
-
 messaging.setBackgroundMessageHandler(function(payload) {
   console.log('[firebase-messaging-sw.js] Received background message ', payload);
   // Customize notification here

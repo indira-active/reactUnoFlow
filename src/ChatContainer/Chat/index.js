@@ -11,12 +11,17 @@ class Chat extends Component {
             stopScroll:false,
             shouldAutoScroll:true
         }
+        componentDidMount(){
+            if(this.props.mUserId){
+                this.props.callUsersMapped(this.props.mUserId,this.props.currentUser.userId)
+            }
+        }
         scrollToBottom = () => {
             const {thing} = this.refs;
             thing.scrollTop = thing.scrollHeight - thing.clientHeight;
           }
           
-          componentDidUpdate(nextprops,nextstate) {
+          componentDidUpdate = (nextprops,nextstate)=>{
             if(this.state.shouldAutoScroll){
                 this.scrollToBottom()
             }

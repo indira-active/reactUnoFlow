@@ -7,6 +7,7 @@ import UserList from "../UserList"
 import Upload from "../Upload"
 import Create from "../Create"
 import Center from "../CenterChat"
+import Spinner from "../components/Spinner"
 
 
 import {connect} from "react-redux"
@@ -16,8 +17,15 @@ import 'firebase/firestore'
 import 'firebase/messaging'
 
 class Layout extends Component {
+  state={on:false}
 
 	componentDidMount = ()=>{
+    //this time out is just a quick fix, I have to adress some of these delay issues
+    setTimeout(() => {
+      this.setState({
+        on:true
+      })
+    }, 2000)
         const  config = {
         apiKey: "AIzaSyCTIb6X9HY1NCOngIP2T1IGFvdN71ZCY4E",
         authDomain: "unoflow-8ec7e.firebaseapp.com",
@@ -33,8 +41,9 @@ class Layout extends Component {
           const storage = firebaseInstance.storage();
           const db = firebaseInstance.firestore();
           const messaging = window.firebase.messaging();
-          messaging.usePublicVapidKey("BBsxfwngNGxcm-lCfiZ6y-SD5oGAlTEzmua0SCqiDgFiWjDFZKSV3hdnZBrsz87_vN7Y5mY9G8FoMckgLefoIZ0");
-          messaging.requestPermission().then(function(messaging){
+          messaging.usePublicVapidKey("BM_9wvZamRDP85vHJHAOUUErAftjGChTQ-nP9TgC6aquy9lmvrHmcfFgWzQR8bMt8w5XF028ZieqtNnBcXnmXOU");
+          const request = ()=>{
+            messaging.requestPermission().then(function(messaging){
                   console.log('Notification permission granted.');
                   messaging.getToken()
                           .then(function(currentToken){
@@ -55,6 +64,8 @@ class Layout extends Component {
                 .catch((err)=>{
                   console.log('Unable to get permission to notify.', err);
                 })
+          }
+          request();
            messaging.onTokenRefresh(()=>{
               messaging.getToken()
               .then((refreshedToken)=>{
@@ -63,11 +74,15 @@ class Layout extends Component {
                 this.sendTokenToServer(refreshedToken);
               })
               .catch((err)=>{
+                request();
                 console.log('Unable to retrieve refreshed token ', err);
               });
             });
+           messaging.onMessage((payload)=>{
+            console.log("Message received. ", payload);
+          });
+          this.start(db);
           this.props.reconcileFirebase({auth,database,storage,firebase:firebaseInstance,db,messaging});
-          this.start(db)
     }
 
         sendTokenToServer = (currentToken)=>{
@@ -181,19 +196,16 @@ class Layout extends Component {
         }
     	render(){
             console.log('state--------------\n',this.props.state,'\n--------------')
-    		return this.props.mappedUsers?( <Switch>
+    		return this.state.on?( <Switch>
             <Route path="/Chat" render={()=>{return (<ChatContainer refresh={this.refresh} />)}} />
             <Route path="/Users" render={()=>{return (<UserList refresh={this.refresh} />)}} />
             <Route path="/Search" render={()=>{return (<UserList refresh={this.refresh} />)}} />
             <Route path="/Center" component={Center} />
             <Route path="/Upload" component={Upload} />
             <Route path="/Create" component={Create} />
-            <Route path="/" exact component={Basic} />
+            <Route path="/" component={Basic} />
             <Redirect to="/" />
-          </Switch>):(<Switch>
-            <Route path="/" exact component={Basic} />
-            <Redirect to="/" />
-          </Switch>)
+          </Switch>):(<Spinner/>)
     	}
 }
 
@@ -202,6 +214,7 @@ const mapStateToProps = state => {
     return {
         state,
         mappedUsers:state.mappedUsers.users,
+        currentUser:state.mappedUsers.currentUser,
         firebase:state.fb
     };
 }
@@ -215,75 +228,3 @@ const mapDispatchToProps = dispatch => {
 
 export default withRouter(connect(mapStateToProps, mapDispatchToProps)(Layout))
 
-//initial load 
-
-/*            const mappedUsers = {};
-            fetch('https://damp-plateau-11898.herokuapp.com/api/loadusersall')
-        .then(res => res.json())
-        .then(load=>{
-            load.forEach(val=>{
-                db.collection("users").doc(val.smoochId).set({
-                    smoochUserId:val.smoochUserId,
-                    active:true,
-                    notCalled:true,
-                    unread:0,
-                    created:val.created
-                });
-            })
-        });
-        db.collection('users').get().then(snapshot=>{
-      snapshot.forEach(doc => {
-          console.log(doc.data())
-            if(!doc.data().smoochUserId){
-              doc.ref.delete();
-            }
-        });
-    })*/
-
-//TOTAL LOAD 
-
-/*                db.collection("users").where("active", "==", true).orderBy('created','desc')
-                    .get()
-                    .then((querySnapshot)=>{
-                        querySnapshot.forEach((doc)=>{
-                            doc.ref.collection('messages').get().then(result=>{
-                                const messages = {}; 
-                                const values = doc.data();
-                                result.forEach((item) => {
-                                    const messageValue = item.data();
-                                    messages[item.id] = {
-                                        content:messageValue.text,
-                                        username:messageValue.role === "appMaker"?"admin":values.smoochUserId|| `anonymous : ${values.smoochUserId||item.id}`,
-                                        authorId:messageValue.authorId,
-                                        readMore:messageValue.text.length>140?true:false
-                                    }
-                                })
-                                    
-                                    mappedUsers[doc.id] = {
-                                    userId:values.smoochUserId,
-                                    firebaseId:doc.id,
-                                    messages,
-                                    active:true,
-                                    notCalled:true,
-                                    unread:0,
-                                    date:values.created
-                                }
-                            })
-                        });*/
-
-/*        let unsubscribe = null
-        if(snap){
-            unsubscribe = doc.ref.collection('messages').onSnapshot(async (test)=>{
-                const mappedUsers = clone({...this.props.users});
-                const newMappedUser = mappedUsers[smoochUserId];
-                if(newMappedUser){
-                    if(typeof newMappedUser.unsubscribe === 'function'){
-                        newMappedUser.unsubscribe();
-                    }
-                    newMappedUser.unsubscribe = unsubscribe
-                    newMappedUser.messages = await newMappedUser.messageFunction();
-                    this.props.reconcileMappedState({users:mappedUsers})
-                }
-                    
-            })
-        }*/

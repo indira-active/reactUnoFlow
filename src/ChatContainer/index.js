@@ -19,13 +19,32 @@ class ChatContainer extends Component {
         currentUser:0
     }
     componentDidMount() {
-        this.socketCall()
+    const int = setInterval(() => {
+        if(!this.props.database || !this.props.mappedUsers){
+            return
+        }
+        clearInterval(int)
+      this.socketCall()
         socket.on('reset',()=>{
             this.props.refresh();
         })
+    }, 50)
+        
     
     }
     socketCall = () => {
+        this.props.database.ref('messages').on('child_added',(snapshot)=>{
+            const values = snapshot.val()
+            if(values.role !== 'appMaker'){
+                this.addToMessages({
+                    content: values.text,
+                    username: values.userId || `anonymous : ${values.authorId}`,
+                    _id: values.authorId,
+                    id:values._id
+                })
+            }
+          })
+
         socket.on('testEvent', message => {
             const msg = JSON.parse(message)
             if(msg.trigger === 'merge:appUser'){
@@ -33,7 +52,7 @@ class ChatContainer extends Component {
                 this.postDoneMapped(msg.discarded[0]._id,msg.surviving._id,msg.surviving.userId);
                 alert(`${msg.discarded[0]._id} is merging with ${msg.surviving.userId} aka ${msg.surviving._id}`)
             }
-            if (msg.trigger === 'message:appUser') {
+      /*      if (msg.trigger === 'message:appUser') {
                 console.log(msg);
                 this.addToMessages({
                     content: msg.messages[0].text,
@@ -41,7 +60,7 @@ class ChatContainer extends Component {
                     _id: msg.appUser._id,
                     id:msg.messages[0]._id
                 })
-            }
+            }*/
         });
     }
     postDoneMapped = (smoochId,userValue,username)=>{
@@ -205,7 +224,7 @@ class ChatContainer extends Component {
                                     </span>
                                 </div>
                             )
-                        }):(<h3 style={{textAlign:"center"}}>NO MORE USERS</h3>)}
+                        }):(<Spinner/>)}
                     </div>
                 </div>
                 {USER?(<div className={classes.App}>
@@ -218,6 +237,7 @@ class ChatContainer extends Component {
                      currentIndex={this.props.currentUser}
                      currentUser={USER} messages={USER.messages}
                      mUserId={mUserId}
+                     db={this.props.db}
                      mUserIdMessages={mUser.messages} />
                 </div>):null}
             </div>
@@ -229,7 +249,8 @@ class ChatContainer extends Component {
 const mapStateToProps = state => {
     return {
         mappedUsers:state.mappedUsers,
-        db:state.fb.db
+        db:state.fb.db,
+        database:state.fb.database
     };
 }
 
@@ -245,30 +266,3 @@ const mapDispatchToProps = dispatch => {
 }
 
 export default withRouter(connect(mapStateToProps, mapDispatchToProps)(ChatContainer))
-                /*load.messages.forEach(msg=>{
-                    this.props.db.collection('users').doc(user).collection('messages').doc(msg._id).set(msg);
-                    const content = msg.text.trim() || msg.actions.map((val)=>{
-                            return val.text
-                        }).join(' ');
-                    newMappedUser.messages[msg._id] = {
-                            content:content,
-                            username:msg.role === "appMaker"?"admin":username|| `anonymous : ${username||msg._id}`,
-                            authorId:msg.authorId,
-                            readMore:content.length>140?true:false
-                        }
-                })*/
-
-
-
-
-        /*fetch('https://us-central1-unoflow-8ec7e.cloudfunctions.net/smooch/getMessages?appUser='+user)
-            .then(res => res.json())
-            .then(async load=>{
-                const mappedUsers = clone({...this.props.mappedUsers.users});
-                const newMappedUser = mappedUsers[user];
-                if(newMappedUser.notCalled){
-                    newMappedUser.messages = await newMappedUser.messages();
-                    newMappedUser.notCalled = false;
-                }
-                this.props.reconcileMappedState({users:mappedUsers,currentUser:change?user:this.props.mappedUsers.currentUser})
-            }).catch(err=>{console.log('err is happening',err)})*/

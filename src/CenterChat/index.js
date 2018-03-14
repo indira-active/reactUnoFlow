@@ -39,7 +39,6 @@ class Center extends Component {
 
 	componentDidUpdate = ()=>{
 				if(this.props.fb.auth && this.props.fb.auth.currentUser && this.props.fb.auth.currentUser.displayName && !this.state.loggedIn){
-							console.log(this.props.fb.auth.currentUser)
 							this.setState({loggedIn:true})
 				}
 	}
