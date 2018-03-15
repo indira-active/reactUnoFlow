@@ -60,3 +60,6 @@ typings/
 #firebase 
 functions/
 
+#build 
+build/
+

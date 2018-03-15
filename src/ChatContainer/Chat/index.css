@@ -64,6 +64,10 @@
   text-align: right;
   color:black;
 }
+.center{
+  grid-column: 2;
+  width: 100%;
+}
 .right div {
     background-color: white;
     border-radius: 10px;
@@ -133,6 +137,9 @@
     height: 100%;
     max-height: 300px;
 }
+.chatParagraph2{
+    animation: fadeIn .5s;
+}
 .chatParagraph button {
     background-color: inherit;
 }
@@ -142,9 +149,26 @@
     font-weight: 1200;
     background-color: blue;
 }
+
+@keyframes fadeIn{
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(-1deg); }
+  50% { transform: rotate(0deg); }
+  75% { transform: rotate(1deg); }
+  100% { transform: rotate(0deg);}
+}
+@keyframes fadeIn2{
+  0% { opacity: 0; }
+  100% { opacity: 1;}
+}
+
 .chatParagraph div{
     padding:6px;
     height: 100%;
+}
+
+.place{
+    animation:fadeIn2 .5s;
 }
 .CHAT .input {
   background: rgba(30, 228, 148, 0.7);

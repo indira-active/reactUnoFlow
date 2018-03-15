@@ -2,7 +2,6 @@ import React, { Component } from "react";
 import Chat from "./Chat"
 import { Button} from "react-bootstrap"
 import classes from './index.css';
-import io from 'socket.io-client'
 import { connect } from 'react-redux';
 import Spinner from "../components/Spinner";
 import {withRouter,Link} from "react-router-dom"
@@ -10,58 +9,39 @@ import {withRouter,Link} from "react-router-dom"
 
 import clone from 'clone'
 
-const socket = io('https://damp-plateau-11898.herokuapp.com/');
 
 
 class ChatContainer extends Component {
+
     state = {
         users:[],
         currentUser:0
     }
     componentDidMount() {
-    const int = setInterval(() => {
-        if(!this.props.database || !this.props.mappedUsers){
-            return
-        }
-        clearInterval(int)
+
       this.socketCall()
-        socket.on('reset',()=>{
-            this.props.refresh();
-        })
-    }, 50)
-        
+      this.setState({date:Date.now()/1000})
     
     }
+
+
     socketCall = () => {
-        this.props.database.ref('messages').on('child_added',(snapshot)=>{
+      this.props.database.ref('messages').limitToLast(1).on('child_added',(snapshot)=>{
             const values = snapshot.val()
-            if(values.role !== 'appMaker'){
-                this.addToMessages({
-                    content: values.text,
-                    username: values.userId || `anonymous : ${values.authorId}`,
-                    _id: values.authorId,
-                    id:values._id
-                })
+            console.log(Number(values.received) > this.state.date);
+            if(values.role !== 'appMaker' && Number(values.received) > this.state.date){
+                            console.log(values)
+                    this.addToMessages({
+                        content: values.text,
+                        username: values.userId || `anonymous : ${values.authorId}`,
+                        _id: values.authorId,
+                        id:values._id
+                    })
+
             }
           })
 
-        socket.on('testEvent', message => {
-            const msg = JSON.parse(message)
-            if(msg.trigger === 'merge:appUser'){
-                console.log(msg)
-                this.postDoneMapped(msg.discarded[0]._id,msg.surviving._id,msg.surviving.userId);
-                alert(`${msg.discarded[0]._id} is merging with ${msg.surviving.userId} aka ${msg.surviving._id}`)
-            }
-      /*      if (msg.trigger === 'message:appUser') {
-                console.log(msg);
-                this.addToMessages({
-                    content: msg.messages[0].text,
-                    username: msg.appUser.userId || `anonymous : ${msg.appUser._id}`,
-                    _id: msg.appUser._id,
-                    id:msg.messages[0]._id
-                })
-            }*/
-        });
+
     }
     postDoneMapped = (smoochId,userValue,username)=>{
         const newUsers = clone(this.props.mappedUsers.users);
@@ -69,13 +49,15 @@ class ChatContainer extends Component {
         delete newUsers[smoochId]
         if(currentUser === smoochId){
             currentUser = Object.keys(newUsers)[0];
+            this.callUsersMapped(currentUser)
         }        
         this.props.reconcileMappedState({currentUser,users:newUsers})
+        // for merging users
         if(userValue&&username){
             this.deactivateUser(true,smoochId,userValue,username)
             this.postOpen(userValue)
         }else{
-            this.deactivateUser(true,smoochId)
+            this.deactivateUser(false,smoochId)
         }
     }
     deactivateUser = (callUsers,smoochId,userValue,username)=>{
@@ -83,8 +65,7 @@ class ChatContainer extends Component {
     }
     //this function needs to be reevaluated for merged users use case
     changeActiveStatus = (active,smoochId,callUsers,userValue,username)=>{
-        const ID = this.props.mappedUsers.users[smoochId].firebaseId
-        const ref = this.props.db.collection('users').doc(ID);
+        const ref = this.props.db.collection('users').doc(smoochId);
         ref.set({
             active: active?true:false
         }, { merge: true });
@@ -100,28 +81,29 @@ class ChatContainer extends Component {
     }
         callUsersMapped =  async (user,username,change)=>{
 
-                const mappedUsers = clone({...this.props.mappedUsers.users});
-                const newMappedUser = mappedUsers[user];
+                const mappedUsers = await clone({...this.props.mappedUsers.users});
+                const newMappedUser = await mappedUsers[user];
                 if(newMappedUser.notCalled){
-                    newMappedUser.messages = await newMappedUser.messages();
+                    newMappedUser.messages = await newMappedUser.messageFunction();
                     newMappedUser.notCalled = false;
                 }else{
                     newMappedUser.messages = await newMappedUser.messageFunction();
                 }
                 this.props.reconcileMappedState({users:mappedUsers,currentUser:change?user:this.props.mappedUsers.currentUser})
+
     }
 
-    wipeUnreadMapped = (id)=>{
-        this.props.reconcileMappedState({
-                    ...this.props.mappedUsers,
-                    users: {...this.props.mappedUsers.users,
-                        [id]: {
-                            ...this.props.mappedUsers.users[id],
-                            unread:0
+        wipeUnreadMapped = (id)=>{
+            this.props.reconcileMappedState({
+                        ...this.props.mappedUsers,
+                        users: {...this.props.mappedUsers.users,
+                            [id]: {
+                                ...this.props.mappedUsers.users[id],
+                                unread:0
+                            }
                         }
-                    }
-    })
-}
+        })
+    }
 
     changeReadMoreMapped = (messageId)=>{
         const users = clone(this.props.mappedUsers.users);
@@ -133,6 +115,9 @@ class ChatContainer extends Component {
     updateCurrentMappedUser = (id)=>{
         this.props.changeCurrentMappedUser(id)
     }
+    sendMessage = (val)=>{
+        this.props.database.ref('messages').push(val)
+    }
     addToMessagesRubricMapped = (MU,message) => {
             const users = clone(MU.users)
             if(message.username === "admin" && message.onClient){
@@ -140,16 +125,27 @@ class ChatContainer extends Component {
                 users[message._id].messages[Date.now()+""+Math.random()] = {
                     content: message.content,
                     username: message.username,
-                    readMore:message.content.length>140?true:false
+                    readMore:message.content.length>140?true:false,
+                    _id:Date.now()+(Math.random()),
+                    authorId:message._id,
+                    name:'admin',
+                    received:Date.now()/1000
                 }
-                socket.emit("message", {
-                        msg: message.content,
-                        id: message._id
-                    })
+            const toSend = {
+                _id:Date.now()+(Math.random()),
+                authorId:message._id,
+                name:'admin',
+                received:Date.now()/1000,
+                text:message.content
+            }
+            this.sendMessage(toSend)
+
             }else if(users[message._id] === undefined){
                      users[message._id] = {
                         userId: message.username,
                         _id: message._id,
+                        notCalled:true,
+                        messageFunction:this.generate({ref:this.props.db.collection('users').doc(message._id||'huh')},message.username),
                         unread:1,
                         messages: {
                             [message.id]:{
@@ -176,6 +172,26 @@ class ChatContainer extends Component {
     addToMessages = (message) => {
         this.props.reconcileMappedState(this.addToMessagesRubricMapped(this.props.mappedUsers,message))
     }
+    generate = (doc,smoochUserId)=>{
+    return ()=>{
+       return doc.ref.collection('messages').get().then(result=>{
+            const messages = {}; 
+            result.forEach((item) => {
+                const messageValue = item.data();
+                if(messageValue.text.trim().length>0){
+                    messages[item.id] = {
+                        content:messageValue.text,
+                        username:messageValue.role === "appMaker"?"admin":smoochUserId|| `anonymous : ${messageValue.name||item.id}`,
+                        authorId:messageValue.authorId,
+                        readMore:messageValue.text.length>140?true:false
+                    }
+                }
+                
+                });
+            return messages
+        });
+    }
+}
     render() {
         const USER = this.props.mappedUsers.users[this.props.mappedUsers.currentUser];
         const mUserId = this.props.mappedUsers.currentUser;
@@ -234,7 +250,6 @@ class ChatContainer extends Component {
                      changeReadMore={this.changeReadMore}
                      callUsersMapped={this.callUsersMapped}
                      changeReadMoreMapped = {this.changeReadMoreMapped}
-                     currentIndex={this.props.currentUser}
                      currentUser={USER} messages={USER.messages}
                      mUserId={mUserId}
                      db={this.props.db}

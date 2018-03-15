@@ -128,9 +128,19 @@ class Layout extends Component {
         isTokenSentToServer = ()=>{
             return window.localStorage.getItem('sentToServer') === 1;
           }
+        reset = ()=>{
+           this.props.firebase.db.collection("users").where("active", "==", false)
+                .get().then(querySnapshot =>{
+                            querySnapshot.forEach((doc)=>{
+                                doc.ref.set({active:true},{merge:true})
+
+                            });
+                          });
+        }
 
          start = (db)=>{
             const mappedUsers = {};
+                        
                 db.collection("users").where("active", "==", true).orderBy('created','desc')
                     .get()
                     .then(async querySnapshot =>{
@@ -178,7 +188,7 @@ class Layout extends Component {
                             if(messageValue.text.trim().length>0){
                                 messages[item.id] = {
                                     content:messageValue.text,
-                                    username:messageValue.role === "appMaker"?"admin":smoochUserId|| `anonymous : ${smoochUserId||item.id}`,
+                                    username:messageValue.role === "appMaker"?"admin":smoochUserId|| `anonymous : ${messageValue.name||item.id}`,
                                     authorId:messageValue.authorId,
                                     readMore:messageValue.text.length>140?true:false
                                 }
@@ -195,8 +205,12 @@ class Layout extends Component {
             this.start(this.props.firebase.db);
         }
     	render(){
-            console.log('state--------------\n',this.props.state,'\n--------------')
-    		return this.state.on?( <Switch>
+           console.log('state--------------\n',this.props.state,'\n--------------')
+    		return(<div>
+        <button onClick={this.reset} style={{position:"absolute",top:"0px",right:"5px",zIndex:"2000"}}>
+          reset users
+        </button>
+          {this.state.on?( <Switch>
             <Route path="/Chat" render={()=>{return (<ChatContainer refresh={this.refresh} />)}} />
             <Route path="/Users" render={()=>{return (<UserList refresh={this.refresh} />)}} />
             <Route path="/Search" render={()=>{return (<UserList refresh={this.refresh} />)}} />
@@ -205,7 +219,10 @@ class Layout extends Component {
             <Route path="/Create" component={Create} />
             <Route path="/" component={Basic} />
             <Redirect to="/" />
-          </Switch>):(<Spinner/>)
+          </Switch>):(<Spinner/>)}
+
+        </div>)
+        
     	}
 }
 
