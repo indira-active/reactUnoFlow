@@ -40,12 +40,19 @@ class ChatContainer extends Component {
 
             }
           })
+    this.props.database.ref('mergedUsers').limitToLast(1).on('value',(snapshot)=>{
+        console.log(snapshot.val())
 
-
+            const value = snapshot.val();
+            const user = Object.keys(value)[0];
+                this.postDoneMapped(value[user],user,true);
+          })
     }
     postDoneMapped = (smoochId,userValue,username)=>{
         const newUsers = clone(this.props.mappedUsers.users);
+        if(!newUsers[smoochId]) return
         let currentUser = this.props.mappedUsers.currentUser;
+        const discardedUserId = newUsers[smoochId].userId;
         delete newUsers[smoochId]
         if(currentUser === smoochId){
             currentUser = Object.keys(newUsers)[0];
@@ -53,9 +60,11 @@ class ChatContainer extends Component {
         }        
         this.props.reconcileMappedState({currentUser,users:newUsers})
         // for merging users
+        if(!newUsers[userValue]){
+            this.postOpen(smoochId)
+        }
         if(userValue&&username){
-            this.deactivateUser(true,smoochId,userValue,username)
-            this.postOpen(userValue)
+            alert(`merging ${discardedUserId} into ${newUsers[userValue].userId || userValue}`)
         }else{
             this.deactivateUser(false,smoochId)
         }

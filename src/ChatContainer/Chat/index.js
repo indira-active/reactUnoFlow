@@ -118,6 +118,7 @@ class Chat extends Component {
     	return arrToReturn
     }
 
+
     render() {
         if(this.props.mUserIdMessages){
         const chats = Object.keys(this.props.mUserIdMessages);
