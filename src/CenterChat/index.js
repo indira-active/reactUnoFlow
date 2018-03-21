@@ -65,42 +65,14 @@ class Center extends Component {
 	render(){
 		return(
 
-<div className={classes.App}>
-
-  <header className="">
-    <div className={`${classes.mdc}`}>
-      <div style={{padding:"0px",margin:"0px", display:"grid",gridTemplateRows:"80% 10%"}}>
-        <h3> Indira UnoChat</h3>
-        <br/>
-        <Link to="/Home">Home</Link>
-      </div>
-      <div style={{textAlign:"right"}} id="user-container">
-        <div hidden id="user-pic"></div>
-        <div hidden id="user-name"></div>
-        <button onClick={()=>this.signOut()} hidden={!this.state.loggedIn} >
+      <div style={this.props.style}>
+        <button style={{width:"100%"}} onClick={()=>this.signOut()} hidden={!this.state.loggedIn} >
           Sign-out
         </button>
-        <button hidden={this.state.loggedIn} onClick={()=>{this.signIn()}}id="sign-in" className="mdl-button mdl-js-button mdl-js-ripple-effect mdl-color-text--white">
+        <button style={{width:"100%"}} hidden={this.state.loggedIn} onClick={()=>{this.signIn()}}>
          Sign-in with Google
         </button>
       </div>
-    </div>
-  </header>
-
-  <div >
-  
-		    <div className={classes.input}>
-		    	<input value={this.state.text} onChange={(e)=>{this.setState({text:e.target.value})}}/>
-		    		 <button id="submit" type="submit">
-		              Send
-		         </button>
-		    </div>
-		    		 
-  </div>
-  <button onClick={()=>this.renderMessages()}>
-  	renderMessages
-  </button>
-</div>
 
 
 
@@ -120,38 +92,4 @@ const mapDispatchToProps = dispatch => {
     }
 }
 
-export default withRouter(connect(mapStateToProps, mapDispatchToProps)(Center))
-
-/*		renderMessages = ()=>{
-	  // Reference to the /messages/ database path.
-	  const that = this.props.fb.firebase;
-	  const database = this.props.fb.database
-	  const messagesRef = database.ref('users');
-	  console.log(messagesRef);
-	  // Make sure we remove all previous listeners.
-	  messagesRef.off();
-
-	  // Loads the last 12 messages and listen for new ones.
-	  const setMessage = (data)=>{
-	    //const val = data.val();
-	    this.displayMessage(data.val());
-	  };
-	  messagesRef.limitToLast(12).on('child_added', setMessage);
-	  messagesRef.limitToLast(12).on('child_changed', setMessage);
-	}
-	displayMessage = (data)=>{
-		console.log(JSON.stringify(data))
-	}
-
-	saveMessage = ()=>{
-    const currentUser = this.props.fb.auth.currentUser;
-    this.messagesRef.push({
-      name: currentUser.displayName,
-      text: this.messageInput.value,
-      photoUrl: currentUser.photoURL || '/images/profile_placeholder.png'
-    }).then(()=>{
-      
-    }).catch((error)=>{
-      console.error('Error writing new message to Firebase Database', error);
-    });
-};*/
+export default connect(mapStateToProps, mapDispatchToProps)(Center)

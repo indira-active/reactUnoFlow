@@ -4,9 +4,8 @@ import { Button} from "react-bootstrap"
 import classes from './index.css';
 import { connect } from 'react-redux';
 import Spinner from "../components/Spinner";
+import Basic from "../Basic";
 import {withRouter,Link} from "react-router-dom"
-
-
 import clone from 'clone'
 
 
@@ -23,29 +22,30 @@ class ChatContainer extends Component {
       this.setState({date:Date.now()/1000})
     
     }
-
-
     socketCall = () => {
       this.props.database.ref('messages').limitToLast(1).on('child_added',(snapshot)=>{
-            const values = snapshot.val()
+            const values = snapshot.val();
+            console.log(Number(values.received)||values.received);
+            console.log(this.state.date);
             console.log(Number(values.received) > this.state.date);
-            if(values.role !== 'appMaker' && Number(values.received) > this.state.date){
+            if(values.role !== 'appMaker' && (Number(values.received) > this.state.date)){
+                console.log(values);
                             console.log(values)
                     this.addToMessages({
                         content: values.text,
                         username: values.userId || `anonymous : ${values.authorId}`,
                         _id: values.authorId,
-                        id:values._id
+                        id:values._id,
+                        type:values.type
                     })
 
             }
           })
-    this.props.database.ref('mergedUsers').limitToLast(1).on('value',(snapshot)=>{
+    this.props.database.ref('mergedUsers').on('child_changed',(snapshot)=>{
         console.log(snapshot.val())
-
             const value = snapshot.val();
-            const user = Object.keys(value)[0];
-                this.postDoneMapped(value[user],user,true);
+            const user = snapshot.key;
+                this.postDoneMapped(value,user,true);
           })
     }
     postDoneMapped = (smoochId,userValue,username)=>{
@@ -53,17 +53,19 @@ class ChatContainer extends Component {
         if(!newUsers[smoochId]) return
         let currentUser = this.props.mappedUsers.currentUser;
         const discardedUserId = newUsers[smoochId].userId;
-        delete newUsers[smoochId]
+        delete newUsers[smoochId];
         if(currentUser === smoochId){
             currentUser = Object.keys(newUsers)[0];
-            this.callUsersMapped(currentUser)
-        }        
+        } 
+        console.log('first')       
         this.props.reconcileMappedState({currentUser,users:newUsers})
         // for merging users
         if(!newUsers[userValue]){
             this.postOpen(smoochId)
+            console.log('am I happening')
         }
         if(userValue&&username){
+           //  this.deactivateUser(false,smoochId)
             alert(`merging ${discardedUserId} into ${newUsers[userValue].userId || userValue}`)
         }else{
             this.deactivateUser(false,smoochId)
@@ -91,13 +93,14 @@ class ChatContainer extends Component {
         callUsersMapped =  async (user,username,change)=>{
 
                 const mappedUsers = await clone({...this.props.mappedUsers.users});
-                const newMappedUser = await mappedUsers[user];
+                const newMappedUser = mappedUsers[user];
                 if(newMappedUser.notCalled){
                     newMappedUser.messages = await newMappedUser.messageFunction();
                     newMappedUser.notCalled = false;
                 }else{
                     newMappedUser.messages = await newMappedUser.messageFunction();
                 }
+                console.log('second')
                 this.props.reconcileMappedState({users:mappedUsers,currentUser:change?user:this.props.mappedUsers.currentUser})
 
     }
@@ -138,6 +141,8 @@ class ChatContainer extends Component {
                     _id:Date.now()+(Math.random()),
                     authorId:message._id,
                     name:'admin',
+                    type:message.type||'text',
+                    mediaUrl:message.mediaUrl||null,
                     received:Date.now()/1000
                 }
             const toSend = {
@@ -145,26 +150,34 @@ class ChatContainer extends Component {
                 authorId:message._id,
                 name:'admin',
                 received:Date.now()/1000,
-                text:message.content
+                text:message.content,
+                type:message.type||'text',
+                mediaUrl:message.mediaUrl||null
             }
             this.sendMessage(toSend)
 
             }else if(users[message._id] === undefined){
+                console.log(this.props.db.collection('users').doc(message._id));
                      users[message._id] = {
                         userId: message.username,
                         _id: message._id,
                         notCalled:true,
-                        messageFunction:this.generate({ref:this.props.db.collection('users').doc(message._id||'huh')},message.username),
+                        messageFunction:this.generate({ref:message._id},message.username),
                         unread:1,
+                        active:true,
+                        firebaseId:message._id,
                         messages: {
                             [message.id]:{
                             content: message.content,
                             username: message.username,
-                            readMore:message.content.length>140?true:false
+                            authorId:message._id,
+                            readMore:message.content.length>140?true:false,
+                            type:message.type,
+                            mediaUrl:message.mediaUrl||null
                             }
                         }
                 }
-            }else{
+            }else if(users[message._id]){
                 users[message._id] = {
                     ...users[message._id],
                     unread:users[message._id].unread+1
@@ -172,7 +185,11 @@ class ChatContainer extends Component {
                 users[message._id].messages[message.id] = {
                     content: message.content,
                     username: message.username,
-                    readMore:message.content.length>140?true:false
+                    authorId:message._id,
+                    readMore:message.content.length>140?true:false,
+                    type:message.type,
+                    mediaUrl:message.mediaUrl||null
+
                 }
             }
             return {users}
@@ -183,7 +200,7 @@ class ChatContainer extends Component {
     }
     generate = (doc,smoochUserId)=>{
     return ()=>{
-       return doc.ref.collection('messages').get().then(result=>{
+       return this.props.db.collection('users').doc(doc.ref).collection('messages').get().then(result=>{
             const messages = {}; 
             result.forEach((item) => {
                 const messageValue = item.data();
@@ -192,7 +209,9 @@ class ChatContainer extends Component {
                         content:messageValue.text,
                         username:messageValue.role === "appMaker"?"admin":smoochUserId|| `anonymous : ${messageValue.name||item.id}`,
                         authorId:messageValue.authorId,
-                        readMore:messageValue.text.length>140?true:false
+                        readMore:messageValue.text.length>140?true:false,
+                        type:messageValue.type,
+                        mediaUrl:messageValue.mediaUrl||null
                     }
                 }
                 
@@ -209,20 +228,9 @@ class ChatContainer extends Component {
         return !Object.keys(this.props.mappedUsers.users).length>0?(<Spinner/>):(
             <div className={classes.container}>
                 <div className={classes.frame} >
-                    <div className={classes.corner} >
-                                <Link to="/Users">
-                                Users
-                                </Link>
-                                <Link to="/Chat">
-                                Chat 
-                                </Link>
-                                <Link to="/Upload">
-                                Upload
-                                </Link>
-                                <Link to="/Create">
-                                Create
-                                </Link>
-                        </div>
+                    <div>
+                        <Basic/>
+                    </div>
                     <div style={{overflowY:"scroll",boxSizing:"border-box"}}>
                     {USER?Object.keys(this.props.mappedUsers.users).map(
                         (user, index) => {
@@ -231,7 +239,7 @@ class ChatContainer extends Component {
                                     <Button style={{boxSizing:"border-box"}}
                                         onClick={() => { 
                                             this.updateCurrentMappedUser(user)
-                                            return mUsers[user].notCalled?this.callUsersMapped(user,mUsers[user].userId,null,true):this.props.reconcileState({currentUser:index})}}
+                                            return mUsers[user].notCalled?this.callUsersMapped(user,mUsers[user].userId,null,true):null}}
                                         bsStyle='primary'
                                         bsSize="small">{mUsers[user].userId?mUsers[user].userId:`NR ${user}`}</Button>
                                     <Button 
@@ -262,6 +270,7 @@ class ChatContainer extends Component {
                      currentUser={USER} messages={USER.messages}
                      mUserId={mUserId}
                      db={this.props.db}
+                     storage={this.props.storage}
                      mUserIdMessages={mUser.messages} />
                 </div>):null}
             </div>
@@ -274,7 +283,8 @@ const mapStateToProps = state => {
     return {
         mappedUsers:state.mappedUsers,
         db:state.fb.db,
-        database:state.fb.database
+        database:state.fb.database,
+        storage:state.fb.storage
     };
 }
 

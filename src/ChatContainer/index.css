@@ -6,10 +6,6 @@
   overflow: hidden;
 }
 
-.frame a{
-  font-size: 1.5em;
-  color:black;
-}
 .frame{
     overflow-y: hidden;
     display: grid;
@@ -30,13 +26,11 @@
 @media (max-width: 900px) {
     .frame a{
     font-size: 1em;
-    color:black;
   }
 }
 @media (max-height: 700px) {
     .frame a{
     font-size: .6em;
-    color:black;
   }
 }
 

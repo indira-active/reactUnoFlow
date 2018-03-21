@@ -5,22 +5,33 @@ import {Route,Switch,Redirect,withRouter} from "react-router-dom"
 import Basic from '../Basic'
 import UserList from "../UserList"
 import Upload from "../Upload"
+import Hoc from '../hoc'
 import Create from "../Create"
 import Center from "../CenterChat"
 import Spinner from "../components/Spinner"
-
-
 import {connect} from "react-redux"
 import clone from "clone"
 import * as firebaseInstance from "firebase";
 import 'firebase/firestore'
 import 'firebase/messaging'
 
+// implement this wrapper function
+const wrap = (fun)=>{
+  return new Promise((resolve,reject)=>{
+      try{
+        resolve(fun())
+      }catch(err){
+        reject(err)
+      }
+  })
+}
+
 class Layout extends Component {
   state={on:false}
 
 	componentDidMount = ()=>{
     //this time out is just a quick fix, I have to adress some of these delay issues
+    console.timeEnd('starting')
     setTimeout(() => {
       this.setState({
         on:true
@@ -34,13 +45,14 @@ class Layout extends Component {
         storageBucket: "unoflow-8ec7e.appspot.com",
         messagingSenderId: "245726400419"
         };
-
+        console.time('bob');
         firebaseInstance.initializeApp(config);
           const auth = firebaseInstance.auth();
           const database = firebaseInstance.database();
           const storage = firebaseInstance.storage();
-          const db = firebaseInstance.firestore();
+          const  db = firebaseInstance.firestore();
           const messaging = window.firebase.messaging();
+        console.timeEnd('bob')
           messaging.usePublicVapidKey("BM_9wvZamRDP85vHJHAOUUErAftjGChTQ-nP9TgC6aquy9lmvrHmcfFgWzQR8bMt8w5XF028ZieqtNnBcXnmXOU");
           const request = ()=>{
             messaging.requestPermission().then(function(messaging){
@@ -149,8 +161,8 @@ class Layout extends Component {
                                     mappedUsers[doc.id] = {
                                     userId:values.smoochUserId,
                                     firebaseId:doc.id,
-                                    messages:this.generate(doc,values.smoochUserId,true),
-                                    messageFunction:this.generate(doc,values.smoochUserId),
+                                    messages:{},
+                                    messageFunction:this.generate(doc.id,values.smoochUserId),
                                     active:true,
                                     notCalled:true,
                                     unread:0,
@@ -160,7 +172,7 @@ class Layout extends Component {
                                 if(db){
                             const right = Math.floor(Object.keys(mappedUsers).length/10)>5?5:Math.floor(Object.keys(mappedUsers).length/10);
                             if(mappedUsers[Object.keys(mappedUsers)[0]].notCalled){
-                                mappedUsers[Object.keys(mappedUsers)[0]].messages = await mappedUsers[Object.keys(mappedUsers)[0]].messages();
+                                mappedUsers[Object.keys(mappedUsers)[0]].messages = await mappedUsers[Object.keys(mappedUsers)[0]].messageFunction();
                                 mappedUsers[Object.keys(mappedUsers)[0]].notCalled = false;
                             }
                             this.props.reconcileMappedState({currentUser:Object.keys(mappedUsers)[0],users:mappedUsers,right,quotient:right,userAmount:Math.floor(Object.keys(mappedUsers).length/10)})
@@ -179,9 +191,9 @@ class Layout extends Component {
 
             }
 
-        generate = (doc,smoochUserId,snap)=>{
+        generate = (doc,smoochUserId)=>{
             return ()=>{
-                   return doc.ref.collection('messages').get().then(result=>{
+                   return this.props.firebase.db.collection("users").doc(doc).collection('messages').get().then(result=>{
                         const messages = {}; 
                         result.forEach((item) => {
                             const messageValue = item.data();
@@ -190,7 +202,9 @@ class Layout extends Component {
                                     content:messageValue.text,
                                     username:messageValue.role === "appMaker"?"admin":smoochUserId|| `anonymous : ${messageValue.name||item.id}`,
                                     authorId:messageValue.authorId,
-                                    readMore:messageValue.text.length>140?true:false
+                                    readMore:messageValue.text.length>140?true:false,
+                                    type:messageValue.type,
+                                    mediaUrl:messageValue.mediaUrl||null
                                 }
                             }
                             
@@ -206,22 +220,14 @@ class Layout extends Component {
         }
     	render(){
            console.log('state--------------\n',this.props.state,'\n--------------')
-    		return(<div>
-        <button onClick={this.reset} style={{position:"absolute",top:"0px",right:"5px",zIndex:"2000"}}>
-          reset users
-        </button>
-          {this.state.on?( <Switch>
+    		return(<Hoc>
+            {this.state.on?( <Switch>
             <Route path="/Chat" render={()=>{return (<ChatContainer refresh={this.refresh} />)}} />
             <Route path="/Users" render={()=>{return (<UserList refresh={this.refresh} />)}} />
-            <Route path="/Search" render={()=>{return (<UserList refresh={this.refresh} />)}} />
-            <Route path="/Center" component={Center} />
-            <Route path="/Upload" component={Upload} />
-            <Route path="/Create" component={Create} />
-            <Route path="/" component={Basic} />
-            <Redirect to="/" />
+            <Redirect to="/Users" />
           </Switch>):(<Spinner/>)}
 
-        </div>)
+        </Hoc>)
         
     	}
 }

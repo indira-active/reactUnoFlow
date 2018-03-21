@@ -3,8 +3,7 @@ import classes from './index.css';
 import ReactDOM from 'react-dom';
 import Spinner from "../../components/Spinner";
 import load from "./load.gif"
-//need to add an ability to wipe unread messages
-
+import Hoc from "../../hoc"
 class Chat extends Component {
   state = {
             text:"",
@@ -12,11 +11,20 @@ class Chat extends Component {
             stopScroll:false,
             shouldAutoScroll:true,
             newMessage:false,
-            fadeIn:true
+            fadeIn:true,
+            src:null,
+            top:'500px',
+            imageStatus:null,
+            sendFile:null,
+            promises:[]
         }
         componentDidMount(){
+            console.log('mounting')
             if(this.props.mUserId){
                 this.props.callUsersMapped(this.props.mUserId,this.props.currentUser.userId)
+            }
+            if(this.state.shouldAutoScroll){
+                this.scrollToBottom();
             }
         }
         scrollToBottom = () => {
@@ -26,13 +34,33 @@ class Chat extends Component {
           
           componentDidUpdate = (nextprops,nextstate)=>{
             if(this.state.shouldAutoScroll){
-                this.scrollToBottom()
+                this.scrollToBottom();
+            }
+            if(this.state.src && (this.state.top !== `-${this.src.offsetHeight}px`)){
+                  this.setState({top:`-${this.src.offsetHeight}px`})
+                  console.log(this.src.offsetHeight);
+                return
             }
             
           }
           componentWillReceiveProps = (nextprops)=>{
 
-            if (Object.keys(this.props.mUserIdMessages).length+1 === (Object.keys(nextprops.mUserIdMessages).length)&&this.props.mUserId === nextprops.mUserId){
+            if(this.props.mUserId !== nextprops.mUserId){
+                    this.props.callUsersMapped(nextprops.mUserId)
+                this.scrollToBottom();
+                        this.setState({
+                        text:"",
+                        shouldScroll:true,
+                        stopScroll:false,
+                        shouldAutoScroll:true,
+                        newMessage:false,
+                        fadeIn:true,
+                        src:null,
+                        top:'500px',
+                        imageStatus:null,
+                        sendFile:null
+                        })
+            } else if (Object.keys(this.props.mUserIdMessages).length+1 === (Object.keys(nextprops.mUserIdMessages).length)&&this.props.mUserId === nextprops.mUserId){
                 this.scrollToBottom();
                 console.log('i hhhehhehhehehe')
                 this.setState({shouldAutoScroll:true,newMessage:true,fadeIn:false})
@@ -52,15 +80,39 @@ class Chat extends Component {
 
     submitMessage(e) {
         e.preventDefault();
-        this.props.newMessage({
-            _id:this.props.mUserId,
-            content:this.state.text,
-            username:"admin",
-            onClient:true
-        })
-        this.setState({
-            text:""
-        })
+        if(this.state.src){
+            const txt = this.state.text;
+           const upload = (url)=>{
+                this.props.newMessage({
+                _id:this.props.mUserId,
+                content:txt,
+                username:"admin",
+                onClient:true,
+                type:'image',
+                mediaUrl: url
+            })
+            this.setState({
+                text:"",
+                src:null,
+                top:'500px',
+                imageStatus:null,
+                sendFile:null
+            })
+        }
+        this.state.sendFile(upload)
+
+        }else if(this.state.text){
+                this.props.newMessage({
+                _id:this.props.mUserId,
+                content:this.state.text,
+                username:"admin",
+                onClient:true
+            })
+            this.setState({
+                text:"",
+                src:null
+            })
+        }
     }
     changeReadMore = (messageId)=>{
         this.props.changeReadMoreMapped(messageId)
@@ -96,6 +148,34 @@ class Chat extends Component {
     focusDiv(ref) {
       ReactDOM.findDOMNode(this.refs['thing']).focus();
     }
+    handleFileSelect = (evt)=>{
+      evt.stopPropagation();
+      evt.preventDefault();
+      const file = evt.target.files[0];
+      if(!file) return 
+        const sendFile = (fun)=>{
+            const metadata = {
+            'contentType': file.type
+          };
+          const storageRef = this.props.storage.ref();
+          storageRef.child('images/' + file.name).put(file, metadata).then((snapshot)=>{
+            console.log('Uploaded', snapshot.totalBytes, 'bytes.');
+            console.log(snapshot.metadata);
+            var url = snapshot.downloadURL;
+            console.log('File available at', url);
+            fun(url)
+          }).catch(function(error) {
+            console.error('Upload failed:', error);
+          });
+        }
+        const reader = new FileReader();
+
+        reader.onload = (e)=>{
+                this.setState({src:e.target.result,sendFile})
+        }
+
+        reader.readAsDataURL(file);
+    }
     generateChats = (isAdmin,isFirst,chat,id,flop)=>{
         const place = this.state.fadeIn?classes.place:'';
     	const arrToReturn = [];
@@ -108,16 +188,31 @@ class Chat extends Component {
           <h4>{chat.username}</h4>
             </div>)
     	}
+        const heightValue =chat.mediaUrl?'auto':'100%';
     	arrToReturn.push((<div 
     		key={id+'3'} className={(isAdmin?classes.right:classes.left) + " "+ (this.state.newMessage &&flop?(classes.chatParagraph2+' '+classes.chatParagraph):(classes.chatParagraph+' '+place).trim())}>                                
-          <div style={{overflowY:chat.content.length>140?"scroll":"none"}}  onClick={()=>{if(chat.content.length>140&&!chat.readMore) this.setState({stopScroll:!this.state.stopScroll})}} 
+          <div style={{height:heightValue}}  onClick={()=>{if(chat.content.length>140&&!chat.readMore) this.setState({stopScroll:!this.state.stopScroll})}} 
           onMouseLeave = {()=>this.stopScroll(chat)}
-          >{this.readMoreController(chat)}
-	          {this.readMoreButtonController(chat,id)}</div> 
-          </div>))
+          >{chat.type ==='image'?(
+            <Hoc>
+                <a href={chat.mediaUrl || chat.content} target="_blank">
+                    <img onLoad={this.scrollToBottom} src={chat.mediaUrl || chat.content} style={{maxWidth:"200px",height:"auto"}}></img>
+                </a>
+                <br/>
+                {(chat.content.match('https')||chat.content.match('http'))?null:(
+                    <p style={{textAlign:(isAdmin?'right':'left')}}>
+                    {this.readMoreController(chat)}
+                    {chat.type==='image'?((chat.content.match('https')||chat.content.match('http'))?null:this.readMoreButtonController(chat,id)):this.readMoreButtonController(chat,id)}
+                    </p>)}
+            </Hoc>):this.readMoreController(chat)}
+	          </div> 
+          </div>),)
     	return arrToReturn
     }
-
+    handleImageLoaded(test) {
+        console.log(test)
+    this.setState({ imageStatus: true });
+  }
 
     render() {
         if(this.props.mUserIdMessages){
@@ -134,7 +229,15 @@ class Chat extends Component {
                 ))
             })
         const result = chats.length>0?userValues:<img className={classes.center} src={load}/>
-        console.log(this.state)
+        console.log(this.state);
+        console.log(this.src&&this.src.offsetHeight);
+        const image = (<img 
+            onChange={()=>{console.log('am I changing')}} 
+            ref={(el) => { this.src = el}}
+            onLoad={this.handleImageLoaded.bind(this)}  
+            style={{maxWidth:"500px",transition:'all 1s',position:'absolute',maxHeight:'100px',top:`${this.state.top}`,left:"10px",opacity:this.state.imageStatus?'.8':'0',border:"solid 5px yellow",borderRadius:"5px"}} 
+            src={this.state.src} 
+            alt="csupload"/>)
         return (
             <div className={classes.CHAT}>
                 <h3 
@@ -143,8 +246,14 @@ class Chat extends Component {
                     {result}
                 </div>
                 <form ref={(el) => { this.messagesEnd = el; }}  className={classes.input} onSubmit={(e) => this.submitMessage(e)}>
-                    <input type="text" value={this.state.text} onFocus={()=>this.props.wipeUnreadMapped(this.props.mUserId)} onChange={this.typeHandler} />
+                {image}
+                    <input ref={(val) => { this.text =val; }} type="text" value={this.state.text} onFocus={()=>this.props.wipeUnreadMapped(this.props.mUserId)} onChange={this.typeHandler} />
+                    <input
+                     onChange={(event)=>{this.handleFileSelect(event)}}
+                     ref={(photo) => { this.clickOn = photo; }}
+                     style={{display:'none'}} type="file" name="photo" accept="image/gif, image/png, image/jpeg" />
                     <input type="submit" value="Submit" />
+                    <button onClick={(e)=>{e.preventDefault();this.clickOn.click()}} >photo</button>
                 </form>
             </div>
         )

@@ -5,7 +5,7 @@ const initialState = {
     currentPage:0,
     left:0,
     right:null,
-    tabs:['Home','Search','Chat','Users'],
+    tabs:['Profile','Search','Chat','Users'],
     userAmount:null,
     quotient:null
 };
