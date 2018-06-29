@@ -56,15 +56,18 @@
     "webpack": "3.8.1",
     "webpack-dev-server": "2.9.4",
     "webpack-manifest-plugin": "1.3.2",
-    "whatwg-fetch": "2.0.3"
+    "whatwg-fetch": "2.0.3",
+    "snyk": "^1.87.0"
   },
   "scripts": {
     "starttest": "node scripts/build.js && firebase deploy --only hosting && node scripts/start.js",
-    "start":"node scripts/start.js",
+    "start": "node scripts/start.js",
     "build": "node scripts/build.js",
     "testdeploy": "npm run build && firebase deploy --only hosting",
     "buildanddeploy": "node scripts/build.js && git add --all && git commit -m'building out'&& git push origin master && firebase deploy",
-    "test": "node scripts/test.js --env=jsdom"
+    "test": "node scripts/test.js --env=jsdom",
+    "snyk-protect": "snyk protect",
+    "prepare": "npm run snyk-protect"
   },
   "proxy": "https://damp-plateau-11898.herokuapp.com/",
   "jest": {
@@ -108,5 +111,6 @@
   },
   "eslintConfig": {
     "extends": "react-app"
-  }
+  },
+  "snyk": true
 }
